@@ -18,7 +18,7 @@ Each cheatsheet is a single page with short code examples and plain-English expl
 | Elixir | No (code + expected output shown) | Available |
 | Next.js | Yes | Available |
 | Nuxt | Yes | Available |
-| Python | No (code + expected output shown) | Planned |
+| Python | No (code + expected output shown) | Available |
 
 "Live examples" means you can see the code run directly on the page. Languages that run on a server (like Ruby and Elixir) show the expected output as a comment instead.
 

@@ -21,7 +21,7 @@ concept in one plain sentence before the code, and keep examples short.
 
 ## Current status
 
-Nine topics registered; eight complete. `scripts/dev.ts` (hot-reload server) is unbuilt.
+Nine topics registered; all nine complete. `scripts/dev.ts` (hot-reload server) is unbuilt.
 
 **JavaScript is topic #1 in the manifest** — it is the foundation for TypeScript, React, Vue, Next.js, and Nuxt. Always list and build JavaScript before TypeScript.
 
@@ -36,7 +36,7 @@ Nine topics registered; eight complete. `scripts/dev.ts` (hot-reload server) is 
 | `src/elixir/index.md` | Complete, static code + `# =>` output |
 | `src/nextjs/index.md` | Complete, live demos |
 | `src/nuxt/index.md` | Complete, live demos |
-| `src/python/index.md` | **Not written** |
+| `src/python/index.md` | Complete, static code + `# =>` output |
 | `scripts/build.ts` | Markdown → HTML (shiki, esbuild, demo iframes) |
 | `scripts/pdf.ts` | HTML → PDF (headless Chrome, compact print CSS) |
 | `scripts/dev.ts` | **Not written** |
