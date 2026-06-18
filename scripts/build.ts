@@ -11,7 +11,7 @@ const root = join(__dirname, '..');
 
 const SHIKI_LANGS = [
   'typescript', 'javascript', 'tsx', 'jsx',
-  'ruby', 'erb', 'elixir', 'html', 'css', 'bash', 'json', 'text',
+  'ruby', 'erb', 'elixir', 'python', 'html', 'css', 'bash', 'json', 'text',
 ] as const;
 
 const JSX_TOPICS = new Set(['react', 'nextjs']);

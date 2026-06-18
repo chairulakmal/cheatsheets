@@ -36,7 +36,7 @@ true          # boolean
 nil           # represents absence of a value
 ```
 
-Atoms are constants whose name is their value. `:ok`, `:error`, and `:true` are common atoms you'll see in Elixir code.
+Atoms are constants whose name is their value. `:ok` and `:error` are common atoms you'll see in Elixir code.
 
 ---
 
