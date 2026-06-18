@@ -39,54 +39,25 @@ These are tackled in order: the foundation first, new content later.
 
 ---
 
-## How to use these cheatsheets
+## How to use
 
-1. Download or clone this repository.
-2. Run `npm install` to set up the project.
-3. Run `npm run build` to generate the HTML pages.
-4. Open any file inside the `dist/` folder in your browser — for example, `dist/typescript/index.html`.
+Open any file from the `dist/` folder directly in your browser — for example, `dist/typescript/index.html`. That's it. The pages work without an internet connection and without JavaScript enabled.
 
-The pages work without an internet connection and without JavaScript enabled.
+If you don't have a `dist/` folder yet, see the **For contributors** section below to build the files.
 
 ---
 
-## How the project is organised
+## Questions or suggestions?
 
-```
-src/
-  index.ts          ← list of all topics (add new ones here)
-  typescript/
-    index.md        ← the cheatsheet content (edit this)
-  react/
-    index.md
-  vue/
-    index.md
-  rails/
-    index.md
-  elixir/
-    index.md
-scripts/
-  build.ts          ← converts the markdown files into HTML pages
-  pdf.ts            ← exports HTML pages to PDF
-assets/
-  input.css         ← Tailwind CSS source (edit this)
-  style.css         ← generated — do not edit, not committed to git
-dist/               ← generated output — open these in your browser
-```
-
-The markdown files inside `src/` are the source of truth. **Do not edit anything inside `dist/`** — those files are overwritten every time you run the build.
+If something is unclear or you spot a mistake, open an issue or submit a pull request. All skill levels are welcome.
 
 ---
 
-## What is Markdown?
+## For contributors
 
-Markdown is a simple way to write formatted text using plain characters. For example, `**bold**` becomes **bold** and a line starting with `#` becomes a heading. You can open any `.md` file in a plain text editor.
+### Running the project locally
 
----
-
-## Running the project locally
-
-You need [Node.js](https://nodejs.org) installed (version 18 or newer is recommended).
+You need [Node.js](https://nodejs.org) (version 18 or newer) installed.
 
 ```bash
 # Install dependencies (only needed once)
@@ -104,47 +75,33 @@ npm run build:pdf
 # Delete all generated files and start fresh
 npm run clean
 
-# Check for any TypeScript errors
-npm run typecheck
+# Check for TypeScript errors and linting
+npm run check
 ```
 
-The following command is planned but not yet available:
+`npm run dev` (watch mode) is planned but not yet available.
 
-```bash
-# Watch for changes and rebuild automatically (coming soon)
-npm run dev
+### Project layout
+
+```
+src/
+  index.ts          ← list of all topics (add new ones here)
+  <topic>/
+    index.md        ← cheatsheet content — edit this
+scripts/
+  build.ts          ← converts markdown files into HTML pages
+  pdf.ts            ← exports HTML pages to PDF
+assets/
+  input.css         ← Tailwind CSS source (edit this)
+  style.css         ← generated — do not edit, not committed to git
+dist/               ← generated output — never edit or commit
 ```
 
----
+### Adding a cheatsheet
 
-## Contributing a new cheatsheet
+1. Create `src/<topic>/index.md` with your content (one `# Title`, then `##` sections).
+2. Register the topic in `src/index.ts`.
+3. Run `npm run build:html` and open `dist/<topic>/index.html` to check it.
+4. Run `npm run check` before submitting.
 
-1. Create a new folder: `src/<topic>/`
-2. Add a file called `index.md` with your cheatsheet content.
-3. Register the topic in `src/index.ts` (there are examples in that file to follow).
-4. Run `npm run build:html` and check that your page looks right in the browser.
-5. Run `npm run typecheck` to make sure there are no errors before submitting.
-
----
-
-## Writing a cheatsheet
-
-- Start the file with a single `# Title` heading.
-- Use `##` for sections within the cheatsheet.
-- Every code block must have a language label — for example:
-
-  ````
-  ```typescript
-  const greeting: string = "Hello!";
-  ```
-  ````
-
-  Unlabelled code blocks will not get syntax highlighting.
-
-- Keep explanations short. One sentence per example is usually enough.
-
----
-
-## Questions or suggestions?
-
-If something is unclear or you spot a mistake, open an issue or submit a pull request. All skill levels are welcome.
+Every code block must have a language label (` ```typescript `, ` ```python `, etc.) — unlabelled blocks get no syntax highlighting. Keep each block to around 10 lines and explanations to one sentence.
