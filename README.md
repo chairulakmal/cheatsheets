@@ -13,14 +13,29 @@ Each cheatsheet is a single page with short code examples and plain-English expl
 | JavaScript | Yes | Available |
 | TypeScript | Yes | Available |
 | React | Yes | Available |
+| Next.js | Yes | Available |
 | Vue | Yes | Available |
+| Nuxt | Yes | Available |
 | Ruby on Rails | No (code + expected output shown) | Available |
 | Elixir | No (code + expected output shown) | Available |
-| Next.js | Yes | Available |
-| Nuxt | Yes | Available |
 | Python | No (code + expected output shown) | Available |
 
 "Live examples" means you can see the code run directly on the page. Languages that run on a server (like Ruby and Elixir) show the expected output as a comment instead.
+
+---
+
+## Where this project is headed
+
+All nine cheatsheets are written. The plan from here focuses on making the project solid *before*
+adding more — see `TODO.md` for the detailed checklist. In short:
+
+1. **Better tooling** — automatic checks that catch mistakes, and a watch mode that rebuilds pages as you edit.
+2. **Nicer to read** — copy-to-clipboard buttons, an in-page table of contents, and download links for the PDFs.
+3. **Published online** — host the cheatsheets on the web so you don't have to build them yourself.
+4. **More topics** — HTML, CSS, Git, SQL, Go, Rust, and Docker, in the same beginner-friendly style.
+5. **Easier to browse** — search across all cheatsheets, a dark mode, and an accessibility pass.
+
+These are tackled in order: the foundation first, new content later.
 
 ---
 
