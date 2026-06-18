@@ -14,8 +14,8 @@ const SHIKI_LANGS = [
   'ruby', 'erb', 'elixir', 'html', 'css', 'bash', 'json', 'text',
 ] as const;
 
-const JSX_TOPICS = new Set(['react']);
-const VUE_TOPICS = new Set(['vue']);
+const JSX_TOPICS = new Set(['react', 'nextjs']);
+const VUE_TOPICS = new Set(['vue', 'nuxt']);
 
 // Pinned CDN versions — update deliberately, never automatically.
 const REACT_IMPORT_MAP = `<script type="importmap">

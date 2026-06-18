@@ -10,11 +10,15 @@ Each cheatsheet is a single page with short code examples and plain-English expl
 
 | Topic | Live examples? | Status |
 |-------|---------------|--------|
+| JavaScript | Yes | Available |
 | TypeScript | Yes | Available |
 | React | Yes | Available |
 | Vue | Yes | Available |
-| Ruby on Rails | No (code + expected output shown) | Coming soon |
-| Elixir | No (code + expected output shown) | Coming soon |
+| Ruby on Rails | No (code + expected output shown) | Available |
+| Elixir | No (code + expected output shown) | Available |
+| Next.js | Yes | Available |
+| Nuxt | Yes | Available |
+| Python | No (code + expected output shown) | Planned |
 
 "Live examples" means you can see the code run directly on the page. Languages that run on a server (like Ruby and Elixir) show the expected output as a comment instead.
 
@@ -35,25 +39,24 @@ The pages work without an internet connection and without JavaScript enabled.
 
 ```
 src/
-  index.ts        ← list of all topics (add new ones here)
+  index.ts          ← list of all topics (add new ones here)
   typescript/
-    index.md      ← the cheatsheet content (edit this)
-    demo/         ← live examples (JavaScript-based topics only)
+    index.md        ← the cheatsheet content (edit this)
   react/
     index.md
-    demo/
   vue/
     index.md
-    demo/
-  rails/          ← coming soon
-  elixir/         ← coming soon
+  rails/
+    index.md
+  elixir/
+    index.md
 scripts/
-  build.ts        ← converts the markdown files into HTML pages
-  pdf.ts          ← exports HTML pages to PDF
+  build.ts          ← converts the markdown files into HTML pages
+  pdf.ts            ← exports HTML pages to PDF
 assets/
-  input.css       ← Tailwind CSS source (edit this)
-  style.css       ← generated CSS (do not edit)
-dist/             ← generated output — open these in your browser
+  input.css         ← Tailwind CSS source (edit this)
+  style.css         ← generated — do not edit, not committed to git
+dist/               ← generated output — open these in your browser
 ```
 
 The markdown files inside `src/` are the source of truth. **Do not edit anything inside `dist/`** — those files are overwritten every time you run the build.
@@ -83,6 +86,9 @@ npm run build:html
 # Export PDF files only (requires Google Chrome or Chromium)
 npm run build:pdf
 
+# Delete all generated files and start fresh
+npm run clean
+
 # Check for any TypeScript errors
 npm run typecheck
 ```
@@ -100,10 +106,9 @@ npm run dev
 
 1. Create a new folder: `src/<topic>/`
 2. Add a file called `index.md` with your cheatsheet content.
-3. If the topic supports live examples, add a `demo/` folder inside it.
-4. Register the topic in `src/index.ts` (there are examples in that file to follow).
-5. Run `npm run build` and check that your page looks right in the browser.
-6. Run `npm run typecheck` to make sure there are no errors before submitting.
+3. Register the topic in `src/index.ts` (there are examples in that file to follow).
+4. Run `npm run build:html` and check that your page looks right in the browser.
+5. Run `npm run typecheck` to make sure there are no errors before submitting.
 
 ---
 
