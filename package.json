@@ -17,6 +17,7 @@
     "dev": "tsx scripts/dev.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint scripts/ src/",
+    "validate": "tsx scripts/validate.ts",
     "check": "npm run typecheck && npm run lint"
   },
   "license": "MIT",

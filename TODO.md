@@ -14,7 +14,7 @@ previous one is done.
 
 Goal: mistakes are caught by machine before they ship. Nothing else starts until CI is green.
 
-- [ ] **`scripts/validate.ts` — standalone content linter.** Decoupled from `build.ts` so it runs
+- [x] **`scripts/validate.ts` — standalone content linter.** Decoupled from `build.ts` so it runs
   fast without a full Shiki/esbuild pass. Fails loudly on:
   - untagged code fences,
   - duplicate or missing `# H1`,
@@ -23,7 +23,7 @@ Goal: mistakes are caught by machine before they ship. Nothing else starts until
 
   Add `npm run validate` to `package.json`. The Python-highlighting defect would have been caught
   here instead of shipping silently.
-- [ ] **CI.** Run `npm run check` + `npm run validate` + a full build on every push. A broken topic
+- [x] **CI.** Run `npm run check` + `npm run validate` + a full build on every push. A broken topic
   must not be mergeable.
 
 **Exit criteria:** `validate` catches a known-bad fixture (untagged fence, missing H1) and exits

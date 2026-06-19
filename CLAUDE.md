@@ -37,6 +37,7 @@ Nine topics registered; all nine complete. `scripts/dev.ts` (hot-reload server) 
 | `src/rails/index.md` | Complete, static code + `# =>` output |
 | `src/elixir/index.md` | Complete, static code + `# =>` output |
 | `src/python/index.md` | Complete, static code + `# =>` output |
+| `scripts/validate.ts` | Content linter — untagged fences, H1, demo/live, SHIKI_LANGS |
 | `scripts/build.ts` | Markdown → HTML (shiki, esbuild, demo iframes) |
 | `scripts/pdf.ts` | HTML → PDF (headless Chrome, compact print CSS) |
 | `scripts/dev.ts` | **Not written** |
@@ -67,6 +68,7 @@ npm run build:html   # CSS + HTML only — use this while editing content
 npm run build:css    # Tailwind regen only
 npm run build:pdf    # PDF only (needs Chrome/Chromium; build HTML first)
 npm run clean        # rm -rf dist
+npm run validate     # content linter — runs fast, no build needed
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint scripts/ src/
 npm run check        # typecheck + lint — run before committing
