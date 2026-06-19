@@ -171,6 +171,81 @@ definePageMeta({ layout: 'dashboard' })
 </script>
 ```
 
+## Hybrid rendering with routeRules
+
+`routeRules` sets a rendering strategy per route — the key scalability lever, mixing static, ISR, SSR, and SPA in one app.
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  routeRules: {
+    '/':         { prerender: true },       // static at build time (SSG)
+    '/blog/**':  { isr: 3600 },             // incremental static regen, 1h
+    '/admin/**': { ssr: false },            // client-only SPA
+    '/api/data': { cache: { maxAge: 60 } }, // cache the response 60s
+  },
+})
+```
+
+## Lazy data fetching
+
+`useLazyFetch` (or `lazy: true`) returns immediately without blocking navigation — render a skeleton while data streams in.
+
+```vue
+<script setup lang="ts">
+const { data, pending } = useLazyFetch('/api/products')
+</script>
+
+<template>
+  <Skeleton v-if="pending" />
+  <ProductGrid v-else :items="data" />
+</template>
+```
+
+## Caching fetched data
+
+`getCachedData` reuses the existing payload across navigations instead of refetching data the client already has.
+
+```typescript
+const { data } = await useAsyncData('products', () => $fetch('/api/products'), {
+  getCachedData: (key, nuxtApp) =>
+    nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+})
+```
+
+## Server route caching with Nitro
+
+`cachedEventHandler` caches an endpoint's response in the Nitro layer, offloading repeated expensive work like database aggregation.
+
+```typescript
+// server/api/stats.get.ts
+export default cachedEventHandler(
+  async () => await computeExpensiveStats(),
+  { maxAge: 60 * 5 } // cache for 5 minutes
+)
+```
+
+## Pinia with SSR hydration
+
+State set on the server is serialised into the payload and rehydrated on the client automatically — no manual transfer, no double fetch.
+
+```typescript
+// In a component or plugin during SSR
+const store = useAuthStore()
+await store.fetchUser() // runs on the server; state ships in the payload
+// The client reuses the same state — no second fetch, no hydration mismatch
+```
+
+## Forwarding headers in SSR fetch
+
+On the server, `useRequestFetch` forwards the incoming request's cookies and headers so authenticated calls work during render.
+
+```typescript
+const requestFetch = useRequestFetch()
+const { data } = await useAsyncData('me', () => requestFetch('/api/me'))
+// Forwards the user's auth cookie to the internal API during server render
+```
+
 ## Security — separate public and private runtime config
 
 Anything in `runtimeConfig.public` is sent to the client — never put secrets there.
@@ -257,5 +332,62 @@ export default defineEventHandler(async (event) => {
   })
 
   return { ok: true }
+})
+```
+
+## Security — set security headers via routeRules
+
+Apply security headers globally with `routeRules` (or the `nuxt-security` module) to mitigate clickjacking, MIME sniffing, and XSS.
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  routeRules: {
+    '/**': {
+      headers: {
+        'X-Frame-Options': 'DENY',
+        'X-Content-Type-Options': 'nosniff',
+        'Content-Security-Policy': "default-src 'self'",
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+      },
+    },
+  },
+})
+```
+
+## Security — enforce auth on the server, not just middleware
+
+Route middleware only guards the UI; anyone can call `/api/*` directly, so re-check auth inside every protected server route.
+
+```typescript
+// server/utils/requireUser.ts
+export async function requireUser(event: H3Event) {
+  const token = getCookie(event, 'auth-token')
+  const user = token ? await verifyJwt(token) : null
+  if (!user) throw createError({ statusCode: 401, message: 'Unauthorized' })
+  return user
+}
+```
+
+```typescript
+// server/api/admin/users.get.ts
+export default defineEventHandler(async (event) => {
+  const user = await requireUser(event) // enforced server-side
+  if (user.role !== 'admin') throw createError({ statusCode: 403 })
+  return await db.users.findAll()
+})
+```
+
+## Security — don't leak state across requests in SSR
+
+Module-level variables are shared by every request on the server; never store per-user data there — use the event context, cookies, or `useState`.
+
+```typescript
+// DANGER: shared by every user hitting the server
+let currentUser = null
+
+// SAFE: per-request state, isolated between users
+export default defineEventHandler((event) => {
+  event.context.user = getUserFromRequest(event)
 })
 ```

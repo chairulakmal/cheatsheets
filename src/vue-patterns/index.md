@@ -202,6 +202,137 @@ Wrap a single element in `<Transition>` to animate enter and leave states with C
 </style>
 ```
 
+## Lifecycle hooks
+
+Composition API lifecycle hooks run code at key moments — most commonly `onMounted` for setup and `onUnmounted` for cleanup.
+
+```vue
+<script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
+
+let timer: number
+onMounted(() => { timer = window.setInterval(poll, 1000) })
+onUnmounted(() => clearInterval(timer)) // prevent a memory leak when destroyed
+</script>
+```
+
+## Pinia — scalable state management
+
+Pinia is Vue's official store; a setup store mirrors `<script setup>` — refs are state, computed are getters, and functions are actions.
+
+```typescript
+// stores/auth.ts
+import { defineStore } from 'pinia'
+
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref<User | null>(null)
+  const isLoggedIn = computed(() => user.value !== null)
+  async function login(creds: Credentials) {
+    user.value = await $fetch('/api/login', { method: 'POST', body: creds })
+  }
+  function logout() { user.value = null }
+  return { user, isLoggedIn, login, logout }
+})
+```
+
+Destructure state and getters with `storeToRefs` to keep them reactive; call actions directly off the store.
+
+```vue
+<script setup lang="ts">
+import { storeToRefs } from 'pinia'
+const auth = useAuthStore()
+const { user, isLoggedIn } = storeToRefs(auth) // reactivity preserved
+// const { user } = auth                        // WRONG — loses reactivity
+</script>
+```
+
+## Slots
+
+Slots let a parent inject markup into a child; named slots target specific outlets and the default slot catches the rest.
+
+```vue
+<!-- Card.vue -->
+<template>
+  <div class="card">
+    <header><slot name="title">Default title</slot></header>
+    <slot /> <!-- default slot -->
+  </div>
+</template>
+```
+
+```vue
+<template>
+  <Card>
+    <template #title>Custom Title</template>
+    <p>Body content goes in the default slot.</p>
+  </Card>
+</template>
+```
+
+## Scoped slots
+
+A scoped slot passes child-owned data back up to the parent, letting the parent control how that data renders.
+
+```vue
+<!-- UserList.vue -->
+<template>
+  <li v-for="u in users" :key="u.id">
+    <slot :user="u" />
+  </li>
+</template>
+```
+
+```vue
+<template>
+  <UserList>
+    <template #default="{ user }">
+      <strong>{{ user.name }}</strong>
+    </template>
+  </UserList>
+</template>
+```
+
+## Reactivity performance
+
+For large immutable data, `shallowRef` skips deep tracking and `markRaw` excludes an object entirely — both cut overhead in big apps.
+
+```typescript
+import { shallowRef, markRaw } from 'vue'
+
+// Only reassigning .value is reactive; nested mutations are not tracked
+const rows = shallowRef<Row[]>([])
+rows.value = await fetchRows()
+
+// Never make a heavy third-party instance reactive
+const map = markRaw(new MapLibreInstance())
+```
+
+`v-memo` skips re-rendering a subtree unless its listed dependencies change — useful in long lists.
+
+```vue
+<template>
+  <div v-for="item in list" :key="item.id" v-memo="[item.selected]">
+    <!-- re-renders only when item.selected changes -->
+  </div>
+</template>
+```
+
+## Watcher cleanup
+
+`onWatcherCleanup` cancels stale async work when a watched source changes again — prevents race conditions and leaks.
+
+```typescript
+import { watch, onWatcherCleanup } from 'vue'
+
+watch(query, async (q) => {
+  const controller = new AbortController()
+  onWatcherCleanup(() => controller.abort()) // abort the previous request
+  results.value = await $fetch('/api/search', {
+    query: { q }, signal: controller.signal,
+  })
+})
+```
+
 ## Security — never use v-html with user content
 
 `v-html` injects raw HTML and bypasses Vue's XSS protection — treat it like `innerHTML`.

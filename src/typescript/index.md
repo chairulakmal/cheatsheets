@@ -349,3 +349,44 @@ export default function log(message: string): void {
 import log from "./logger";
 log("Application started");
 ```
+
+---
+
+## Type Narrowing
+
+TypeScript **narrows** a union to a specific type when you check it with `typeof`, `in`, or `instanceof`.
+
+```typescript
+function format(value: string | number): string {
+  if (typeof value === "number") {
+    return value.toFixed(2);   // TypeScript knows it's a number here
+  }
+  return value.toUpperCase();  // here it must be a string
+}
+```
+
+A custom **type guard** is a function returning `x is Type` that tells TypeScript what a value is.
+
+```typescript
+interface Dog { bark: () => void }
+interface Cat { meow: () => void }
+
+function isDog(pet: Dog | Cat): pet is Dog {
+  return "bark" in pet;
+}
+```
+
+---
+
+## `unknown` vs `any`
+
+`any` switches off type checking; `unknown` is the safe version — you must check the type before using it. Prefer `unknown` for data you don't control, like API responses.
+
+```typescript
+const data: unknown = JSON.parse('{"id": 1}');
+
+// data.id;   // Error — you must narrow the type first
+if (typeof data === "object" && data !== null && "id" in data) {
+  console.log((data as { id: number }).id);  // safe after narrowing
+}
+```

@@ -280,3 +280,38 @@ Use it in a parent template:
 <UserCard name="Alice" role="Admin" />
 <UserCard name="Bob" />
 ```
+
+---
+
+## Watchers
+
+A **watcher** runs a function whenever a reactive value changes — useful for side effects like saving or fetching data.
+
+```typescript
+import { ref, watch } from "vue";
+
+const search = ref("");
+watch(search, (newValue, oldValue) => {
+  console.log(`Search changed from "${oldValue}" to "${newValue}"`);
+});
+```
+
+Use `watch` to react to a value changing. Use `computed` when you only need to derive a new value from existing ones.
+
+---
+
+## Lifecycle Hooks
+
+Lifecycle hooks run code at key moments — when a component appears (`onMounted`) or is removed (`onUnmounted`).
+
+```typescript
+import { onMounted, onUnmounted } from "vue";
+
+setup() {
+  let timer;
+  onMounted(() => { timer = setInterval(() => console.log("tick"), 1000); });
+  onUnmounted(() => clearInterval(timer)); // clean up to prevent memory leaks
+}
+```
+
+Always clean up timers, listeners, and subscriptions in `onUnmounted` — forgetting to is a common cause of memory leaks.

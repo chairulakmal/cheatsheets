@@ -334,3 +334,54 @@ export default defineNuxtConfig({
   },
 });
 ```
+
+---
+
+## Shared state with useState
+
+`useState` creates state shared across components and safe for server-side rendering — use it instead of a plain `ref` for app-wide values.
+
+```typescript
+// composables/useCart.ts
+export const useCart = () => useState<string[]>("cart", () => []);
+```
+
+```html
+<script setup>
+const cart = useCart();  // same value everywhere, survives SSR hydration
+</script>
+```
+
+A module-level `ref` would be shared across all users on the server — `useState` keeps each request's state separate.
+
+---
+
+## Error handling
+
+Throw an error with `createError` to stop rendering and show an error response. Set `fatal: true` to render the full-screen error page.
+
+```typescript
+// server/api/post/[id].get.ts
+export default defineEventHandler((event) => {
+  const id = getRouterParam(event, "id");
+  if (!id) {
+    throw createError({ statusCode: 400, statusMessage: "Missing id" });
+  }
+});
+```
+
+Customise the error page by creating `error.vue` in the project root.
+
+```html
+<!-- error.vue -->
+<script setup>
+defineProps<{ error: { statusCode: number } }>();
+</script>
+
+<template>
+  <div>
+    <h1>{{ error.statusCode }}</h1>
+    <NuxtLink to="/">Go home</NuxtLink>
+  </div>
+</template>
+```

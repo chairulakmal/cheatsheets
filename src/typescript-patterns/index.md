@@ -219,6 +219,102 @@ const colors = {
 const [r] = colors.red;  // OK — inferred as [number, number, number]
 ```
 
+## keyof and indexed access types
+
+`keyof` produces a union of an object's keys; indexed access (`T[K]`) reads the type of a property.
+
+```typescript
+interface User { id: number; name: string; email: string }
+
+type UserKey = keyof User       // 'id' | 'name' | 'email'
+type NameType = User['name']    // string
+type Values = User[keyof User]  // number | string
+
+// A fully type-safe property getter — return type is exactly T[K]
+function getProp<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key]
+}
+```
+
+## typeof type operator
+
+In type position, `typeof` captures the type of an existing value, keeping types in sync with runtime constants.
+
+```typescript
+const config = { host: 'localhost', port: 3000, secure: true }
+type Config = typeof config // { host: string; port: number; secure: boolean }
+
+const ROLES = ['admin', 'editor'] as const
+type Role = (typeof ROLES)[number] // 'admin' | 'editor'
+```
+
+## Function overloads
+
+Overload signatures describe multiple call shapes for one function, giving a precise return type per argument pattern.
+
+```typescript
+function parse(input: string): object
+function parse(input: string, raw: true): string
+function parse(input: string, raw?: boolean): object | string {
+  return raw ? input : JSON.parse(input)
+}
+
+const obj = parse('{}')        // object
+const str = parse('{}', true)  // string
+```
+
+## never and exhaustiveness checking
+
+Assigning the remaining value to `never` in a `default` branch makes adding a new union member a compile-time error.
+
+```typescript
+type Shape =
+  | { kind: 'circle'; r: number }
+  | { kind: 'square'; size: number }
+
+function area(s: Shape): number {
+  switch (s.kind) {
+    case 'circle': return Math.PI * s.r ** 2
+    case 'square': return s.size ** 2
+    default:
+      const _exhaustive: never = s // errors if a new kind is added
+      return _exhaustive
+  }
+}
+```
+
+## Branded types
+
+A branded type stops you mixing values that share a primitive type, like passing a raw string where a validated `UserId` is required.
+
+```typescript
+type UserId = string & { readonly __brand: 'UserId' }
+
+function asUserId(id: string): UserId {
+  // run validation here
+  return id as UserId
+}
+
+function getUser(id: UserId) { /* ... */ }
+
+getUser(asUserId('u_123')) // OK
+// getUser('u_123')        // Error: plain string is not a UserId
+```
+
+## Readonly for immutability
+
+`readonly` arrays prevent mutation, making shared data safe to pass around a large codebase without defensive copies.
+
+```typescript
+function sum(nums: readonly number[]): number {
+  // nums.push(1) // Error: push does not exist on a readonly array
+  return nums.reduce((a, b) => a + b, 0)
+}
+
+const config: ReadonlyArray<string> = ['a', 'b']
+// config[0] = 'c' // Error
+```
+
 ## Security — `unknown` instead of `any`
 
 `any` disables all type checking; `unknown` forces you to narrow before use, making it safe for untrusted data like API responses or `JSON.parse` output.

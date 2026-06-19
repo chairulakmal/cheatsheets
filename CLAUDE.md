@@ -37,9 +37,9 @@ Twelve topics registered; all twelve complete. Phases 1–2 shipped: content lin
 | `src/rails/index.md` | Complete, static code + `# =>` output |
 | `src/elixir/index.md` | Complete, static code + `# =>` output |
 | `src/python/index.md` | Complete, static code + `# =>` output |
-| `src/typescript-patterns/index.md` | Complete, static — generics, utility types, discriminated unions, type narrowing, security |
-| `src/vue-patterns/index.md` | Complete, static — script setup, composables, provide/inject, security |
-| `src/nuxt-patterns/index.md` | Complete, static — useFetch, server routes, middleware, auth cookies, security |
+| `src/typescript-patterns/index.md` | Complete, static — generics, utility types, keyof/typeof, overloads, never/exhaustiveness, branded types, security |
+| `src/vue-patterns/index.md` | Complete, static — script setup, Pinia, composables, slots, lifecycle, reactivity perf, watcher cleanup, security |
+| `src/nuxt-patterns/index.md` | Complete, static — useFetch, routeRules/hybrid rendering, Nitro caching, SSR auth, security headers, server-side auth |
 | `scripts/validate.ts` | Content linter — untagged fences, H1, demo/live, SHIKI_LANGS |
 | `scripts/build.ts` | Markdown → HTML (shiki, esbuild, demo iframes) |
 | `scripts/pdf.ts` | HTML → PDF (headless Chrome, compact print CSS) |
