@@ -25,8 +25,7 @@ jobs:
       - name: Build HTML
         run: npm run build:html
         env:
-          SITE_URL: https://chairulakmal.github.io/cheatsheets
-
+          SITE_URL: https://cheat.chairulakmal.com
       - name: Create dist.zip
         run: zip -r dist.zip dist/
 

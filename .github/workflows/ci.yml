@@ -33,7 +33,7 @@ jobs:
       - name: Build
         run: npm run build:html
         env:
-          SITE_URL: https://chairulakmal.github.io/cheatsheets
+          SITE_URL: https://cheat.chairulakmal.com
 
   deploy:
     needs: ci
@@ -57,7 +57,7 @@ jobs:
       - name: Build HTML
         run: npm run build:html
         env:
-          SITE_URL: https://chairulakmal.github.io/cheatsheets
+          SITE_URL: https://cheat.chairulakmal.com
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

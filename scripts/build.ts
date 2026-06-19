@@ -372,6 +372,14 @@ async function main() {
 
   writeFileSync(join(root, 'dist', 'index.html'), buildIndexPage(css), 'utf-8');
   console.log('Built: dist/index.html');
+
+  // Emit a CNAME so GitHub Pages keeps the custom domain on every deploy.
+  // Derived from SITE_URL, so the hostname lives in one place (the workflows).
+  if (SITE_URL) {
+    const host = SITE_URL.replace(/^https?:\/\//, '');
+    writeFileSync(join(root, 'dist', 'CNAME'), `${host}\n`, 'utf-8');
+    console.log(`Built: dist/CNAME (${host})`);
+  }
 }
 
 main().catch((err) => {

@@ -1,7 +1,6 @@
 # Developer Cheatsheets
 
-[![CI](https://github.com/chairulakmal/cheatsheets/actions/workflows/ci.yml/badge.svg)](https://github.com/chairulakmal/cheatsheets/actions/workflows/ci.yml)
-[![Deploy](https://img.shields.io/github/deployments/chairulakmal/cheatsheets/github-pages?label=deploy)](https://chairulakmal.github.io/cheatsheets/)
+[![Deploy](https://img.shields.io/github/deployments/chairulakmal/cheatsheets/github-pages?label=deploy)](https://cheat.chairulakmal.com/)
 
 > **Note:** the deploy badge stays red until the repository is made public and GitHub Pages is enabled (Settings → Pages → Source: GitHub Actions). GitHub Pages requires a public repo on the free plan.
 
