@@ -6,7 +6,7 @@
   "description": "Beginner-friendly developer cheatsheets built from Markdown into static HTML.",
   "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "scripts": {
     "build": "npm run build:css && tsx scripts/build.ts && tsx scripts/pdf.ts",
