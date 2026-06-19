@@ -1,5 +1,10 @@
 # Developer Cheatsheets
 
+[![CI](https://github.com/chairulakmal/cheatsheets/actions/workflows/ci.yml/badge.svg)](https://github.com/chairulakmal/cheatsheets/actions/workflows/ci.yml)
+[![Deploy](https://img.shields.io/github/deployments/chairulakmal/cheatsheets/github-pages?label=deploy)](https://chairulakmal.github.io/cheatsheets/)
+
+> **Note:** the deploy badge stays red until the repository is made public and GitHub Pages is enabled (Settings → Pages → Source: GitHub Actions). GitHub Pages requires a public repo on the free plan.
+
 A collection of quick-reference guides for programming languages and frameworks — written for beginners who want a handy reference while they learn.
 
 Each cheatsheet is a single page with short code examples and plain-English explanations. Open it in a browser and keep it beside your editor while you code.
@@ -25,11 +30,13 @@ Each cheatsheet is a single page with short code examples and plain-English expl
 
 "Live examples" means you can see the code run directly on the page. Languages that run on a server (like Ruby and Elixir) show the expected output as a comment instead.
 
+The **Patterns** sheets (TypeScript, Vue, Nuxt) go beyond the basics — they cover the scalability and security topics commonly expected of intermediate engineers.
+
 ---
 
 ## Where this project is headed
 
-All nine cheatsheets are written and the core tooling is in place. See `TODO.md` for the full checklist. In short:
+All twelve cheatsheets are written and the core tooling is in place. See `TODO.md` for the full checklist. In short:
 
 1. ~~**Better tooling** — automatic checks that catch mistakes, and a watch mode that rebuilds pages as you edit.~~ ✓ Done — `npm run validate`, `npm run dev`, GitHub Actions CI.
 2. ~~**Nicer to read** — copy-to-clipboard buttons, an in-page table of contents, and meta descriptions.~~ ✓ Done — copy buttons on every code block, per-page TOC, `<meta description>` on every page.
@@ -59,7 +66,7 @@ If something is unclear or you spot a mistake, open an issue or submit a pull re
 
 ### Running the project locally
 
-You need [Node.js](https://nodejs.org) (version 18 or newer) installed.
+You need [Node.js](https://nodejs.org) (version 24 or newer — see `.nvmrc`) installed.
 
 ```bash
 # Install dependencies (only needed once)
@@ -111,3 +118,9 @@ dist/               ← generated output — never edit or commit
 4. Run `npm run check` before submitting.
 
 Every code block must have a language label (` ```typescript `, ` ```python `, etc.) — unlabelled blocks get no syntax highlighting. Keep each block to around 10 lines and explanations to one sentence.
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE).

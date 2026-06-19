@@ -27,7 +27,7 @@ Twelve topics registered; all twelve complete. Phases 1–2 shipped: content lin
 
 | Path | State |
 |------|-------|
-| `src/index.ts` | Manifest — nine topics registered, JavaScript first |
+| `src/index.ts` | Manifest — twelve topics registered, JavaScript first |
 | `src/javascript/index.md` | Complete, live demos |
 | `src/typescript/index.md` | Complete, live demos |
 | `src/react/index.md` | Complete, live demos |
