@@ -4,11 +4,18 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history needed for git log last-updated dates
 
       - uses: actions/setup-node@v4
         with:
@@ -25,3 +32,44 @@ jobs:
 
       - name: Build
         run: npm run build:html
+        env:
+          SITE_URL: https://chairulakmal.github.io/cheatsheets
+
+  deploy:
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium
+        run: sudo apt-get install -y chromium-browser
+
+      - name: Build HTML
+        run: npm run build:html
+        env:
+          SITE_URL: https://chairulakmal.github.io/cheatsheets
+
+      - name: Build PDFs
+        run: npm run build:pdf
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

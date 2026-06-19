@@ -64,16 +64,18 @@ Firefox, and Safari. Every page has a valid `<title>` and `<meta description>`.
 
 Goal: people can find and use the cheatsheets without cloning or building locally.
 
-- [ ] **Deploy** the static site (GitHub Pages or Railway — use **Railpack**, never Nixpacks).
-  Wire CI to auto-deploy on merge to `main`.
-- [ ] **Pre-built `dist.zip`** attached to each GitHub Release so beginners can download-and-open
-  without Node installed.
-- [ ] **"Last updated" date** per cheatsheet (from `git log`) so readers can gauge freshness.
-- [ ] **Open Graph / meta tags** for shareable link previews (validate with Slack and Twitter card
-  validator).
-- [ ] **PDF download links** on each topic page (now that PDFs exist at a stable deployed URL).
-- [ ] **User feedback loop** — pin a GitHub Discussions thread ("What's missing or broken?") so
-  future prioritisation is driven by actual usage, not assumptions.
+- [x] **Deploy** to GitHub Pages. CI auto-deploys on merge to `main` via `actions/deploy-pages`.
+  Enable Pages in repo Settings → Pages → Source: GitHub Actions.
+- [x] **Pre-built `dist.zip`** — `.github/workflows/release.yml` builds HTML + PDFs and attaches
+  `dist.zip` to every GitHub Release automatically.
+- [x] **"Last updated" date** per cheatsheet — `git log -1 --format="%as"` per file, shown in the
+  page header. Requires `fetch-depth: 0` in CI checkout (already set).
+- [x] **Open Graph / meta tags** — `og:title`, `og:description`, `og:url`, `og:type`,
+  `twitter:card` emitted in `build.ts`. Set `SITE_URL` env var at build time for absolute URLs.
+- [x] **PDF download links** on each topic page — relative `↓ PDF` link in the header pointing to
+  `./<slug>-cheatsheet.pdf`; works locally after `npm run build:pdf` and on the deployed site.
+- [ ] **User feedback loop** — manually pin a GitHub Discussions thread ("What's missing or
+  broken?") after the site goes live.
 
 **Exit criteria:** public URL live and link-check clean, OG preview renders correctly, ZIP is
 downloadable from the Releases page, CI auto-deploys on merge.

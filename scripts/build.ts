@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Marked } from 'marked';
@@ -16,6 +17,20 @@ const SHIKI_LANGS = [
 
 const JSX_TOPICS = new Set(['react', 'nextjs']);
 const VUE_TOPICS = new Set(['vue', 'nuxt']);
+
+// Set SITE_URL env var at build time to enable absolute OG URLs and canonical links.
+const SITE_URL = (process.env.SITE_URL ?? '').replace(/\/$/, '');
+
+function getLastUpdated(filePath: string): string {
+  try {
+    return execSync(`git log -1 --format="%as" -- "${filePath}"`, {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+  } catch {
+    return '';
+  }
+}
 
 // Pinned CDN versions — update deliberately, never automatically.
 const REACT_IMPORT_MAP = `<script type="importmap">
@@ -236,7 +251,32 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
   });
 }
 
-function pageHtml(title: string, content: string, css: string, nav: string, description: string): string {
+interface PageOpts {
+  slug?: string;
+  lastUpdated?: string;
+}
+
+function pageHtml(title: string, content: string, css: string, nav: string, description: string, opts: PageOpts = {}): string {
+  const { slug, lastUpdated } = opts;
+  const pageUrl = slug && SITE_URL ? `${SITE_URL}/${slug}/` : SITE_URL ? `${SITE_URL}/` : '';
+
+  const ogTags = `
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Developer Cheatsheets">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${description}">
+  ${pageUrl ? `<meta property="og:url" content="${pageUrl}">` : ''}
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="${title}">
+  <meta name="twitter:description" content="${description}">`;
+
+  const metaLine = slug && lastUpdated
+    ? `<div class="flex items-center gap-4 mt-2">
+        <span class="text-xs text-slate-400">Updated ${lastUpdated}</span>
+        <a href="./${slug}-cheatsheet.pdf" download class="text-xs text-blue-500 hover:underline">↓ PDF</a>
+      </div>`
+    : '';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -244,6 +284,8 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
   <meta name="description" content="${description}">
+  ${pageUrl ? `<link rel="canonical" href="${pageUrl}">` : ''}
+  ${ogTags}
   <style>${css}</style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -251,6 +293,7 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
     <div class="max-w-3xl mx-auto px-6 py-8">
       ${nav}
       <h1 class="text-3xl font-bold text-slate-900 mt-1">${title}</h1>
+      ${metaLine}
     </div>
   </header>
   <main class="max-w-3xl mx-auto px-6 py-10">
@@ -284,6 +327,7 @@ function buildIndexPage(css: string): string {
     css,
     '',
     'Quick-reference developer cheatsheets for popular programming languages and frameworks, with live demos and code examples.',
+    {},
   );
 }
 
@@ -317,7 +361,8 @@ async function main() {
     const marked = buildMarked(highlighter, topic);
     const content = await marked.parse(mdBody);
     const description = `Quick-reference ${topic.title} cheatsheet with syntax examples${topic.live ? ' and live demos' : ''}.`;
-    const html = pageHtml(title, toc + content, css, nav, description);
+    const lastUpdated = getLastUpdated(mdPath);
+    const html = pageHtml(title, toc + content, css, nav, description, { slug: topic.slug, lastUpdated });
 
     const outDir = join(root, 'dist', topic.slug);
     mkdirSync(outDir, { recursive: true });

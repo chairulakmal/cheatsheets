@@ -33,7 +33,7 @@ All nine cheatsheets are written and the core tooling is in place. See `TODO.md`
 
 1. ~~**Better tooling** — automatic checks that catch mistakes, and a watch mode that rebuilds pages as you edit.~~ ✓ Done — `npm run validate`, `npm run dev`, GitHub Actions CI.
 2. ~~**Nicer to read** — copy-to-clipboard buttons, an in-page table of contents, and meta descriptions.~~ ✓ Done — copy buttons on every code block, per-page TOC, `<meta description>` on every page.
-3. **Published online** — host the cheatsheets on the web so you don't have to build them yourself.
+3. ~~**Published online** — host the cheatsheets on the web so you don't have to build them yourself.~~ ✓ Done — auto-deploys to GitHub Pages on every push to `main`. Pre-built ZIP attached to each GitHub Release.
 4. **More topics** — HTML, CSS, Git, SQL, Go, Rust, and Docker, in the same beginner-friendly style.
 5. **Easier to browse** — search across all cheatsheets, a dark mode, and an accessibility pass.
 

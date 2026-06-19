@@ -56,7 +56,7 @@ Phases are **strictly ordered** — don't start a later phase while an earlier o
 
 1. ~~**Harden the toolchain**~~ — ✓ done (`validate`, CI, nodemon watch mode).
 2. ~~**Reader UX**~~ — ✓ done (copy buttons, per-page TOC, meta descriptions, PDF print fix).
-3. **Publish & distribute** — deploy (Railpack/Pages), combined PDF, "last updated" dates, OG tags.
+3. ~~**Publish & distribute**~~ — ✓ done (GitHub Pages CI deploy, release dist.zip, last-updated dates, OG tags, PDF links).
 4. **Broaden coverage** — new topics (HTML, CSS, Git, SQL, Go, Rust, Docker), more demos.
 5. **Discovery & polish** — client-side search, dark mode, accessibility audit, topic grouping.
 
@@ -69,6 +69,7 @@ not whatever is most interesting. If you finish a roadmap item, tick it off in `
 npm run dev          # watch src/ + assets/, rebuild HTML on change
 npm run build        # CSS + HTML + PDF (full build)
 npm run build:html   # CSS + HTML only — use this while editing content
+                     # Set SITE_URL=https://... for absolute OG/canonical URLs
 npm run build:css    # Tailwind regen only
 npm run build:pdf    # PDF only (needs Chrome/Chromium; build HTML first)
 npm run clean        # rm -rf dist
