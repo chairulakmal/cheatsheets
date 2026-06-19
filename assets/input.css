@@ -13,7 +13,26 @@
   opacity: 1;
 }
 
-/* In print/PDF: hide iframes; the static code above them is already visible. */
+/* Print / "Save as PDF": hide interactive chrome and compact the layout so the
+   browser's print-to-PDF (and the optional local pdf.ts) produce a clean, dense
+   cheatsheet. Demos' iframes are hidden — the static code above them stays. */
 @media print {
-  iframe { display: none !important; }
+  iframe,
+  .copy-btn,
+  .no-print,
+  nav[aria-label="Breadcrumb"] { display: none !important; }
+
+  html { font-size: 11px; }
+  body { background: #fff !important; }
+  header > div,
+  main { padding-top: 10px !important; padding-bottom: 10px !important; }
+  .prose h2 { margin-top: 1.1em !important; margin-bottom: 0.4em !important; }
+  .prose h2,
+  .prose h3 { break-after: avoid; }
+  .prose p,
+  .prose li { margin-top: 0.3em !important; margin-bottom: 0.3em !important; }
+  .not-prose { margin: 0.6rem 0 !important; break-inside: avoid; }
+  pre { break-inside: avoid; }
+
+  @page { size: A4; margin: 14mm; }
 }

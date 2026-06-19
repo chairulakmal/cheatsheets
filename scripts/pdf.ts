@@ -33,21 +33,10 @@ async function main() {
     headless: true,
   });
 
-  // Compact styles injected for PDF — smaller than the HTML view
-  const pdfCompactCss = `
-    html { font-size: 11px; }
-    body { background: white !important; }
-    nav { display: none !important; }
-    header > div { padding-top: 10px !important; padding-bottom: 10px !important; }
-    main { padding-top: 10px !important; padding-bottom: 10px !important; }
-    .prose h2 { margin-top: 1.1em !important; margin-bottom: 0.4em !important; break-after: avoid; }
-    .prose h3 { break-after: avoid; }
-    .prose p, .prose li { margin-top: 0.3em !important; margin-bottom: 0.3em !important; }
-    .not-prose { margin-top: 0.6rem !important; margin-bottom: 0.6rem !important; break-inside: avoid; }
-    pre { break-inside: avoid; }
-    iframe { height: 70px !important; }
-  `;
-
+  // Print styling lives in the page's own @media print CSS (assets/input.css);
+  // emulateMediaType('print') makes Puppeteer apply exactly what a reader gets
+  // from the browser's "Save as PDF". This script is an optional local tool —
+  // CI no longer generates PDFs.
   const page = await browser.newPage();
   await page.emulateMediaType('print');
 
@@ -64,7 +53,6 @@ async function main() {
     const pdfPath = join(root, 'dist', topic.slug, pdfName);
 
     await page.goto(fileUrl, { waitUntil: 'networkidle0' });
-    await page.addStyleTag({ content: pdfCompactCss });
     await page.pdf({
       path: pdfPath,
       format: 'A4',

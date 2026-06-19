@@ -270,10 +270,10 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${description}">`;
 
-  const metaLine = slug && lastUpdated
+  const metaLine = slug
     ? `<div class="flex items-center gap-4 mt-2">
-        <span class="text-xs text-slate-500">Updated ${lastUpdated}</span>
-        <a href="./${slug}-cheatsheet.pdf" download class="text-xs text-blue-600 hover:underline">↓ PDF</a>
+        ${lastUpdated ? `<span class="text-xs text-slate-500">Updated ${lastUpdated}</span>` : ''}
+        <button type="button" onclick="window.print()" class="no-print text-xs text-blue-600 hover:underline">↓ Save as PDF</button>
       </div>`
     : '';
 

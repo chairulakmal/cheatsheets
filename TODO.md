@@ -66,14 +66,15 @@ Goal: people can find and use the cheatsheets without cloning or building locall
 
 - [x] **Deploy** to GitHub Pages. CI auto-deploys on merge to `main` via `actions/deploy-pages`.
   Enable Pages in repo Settings → Pages → Source: GitHub Actions.
-- [x] **Pre-built `dist.zip`** — `.github/workflows/release.yml` builds HTML + PDFs and attaches
-  `dist.zip` to every GitHub Release automatically.
+- [x] **Pre-built `dist.zip`** — `.github/workflows/release.yml` builds the HTML site and attaches
+  `dist.zip` to every GitHub Release automatically (no Chromium/PDF step).
 - [x] **"Last updated" date** per cheatsheet — `git log -1 --format="%as"` per file, shown in the
   page header. Requires `fetch-depth: 0` in CI checkout (already set).
 - [x] **Open Graph / meta tags** — `og:title`, `og:description`, `og:url`, `og:type`,
   `twitter:card` emitted in `build.ts`. Set `SITE_URL` env var at build time for absolute URLs.
-- [x] **PDF download links** on each topic page — relative `↓ PDF` link in the header pointing to
-  `./<slug>-cheatsheet.pdf`; works locally after `npm run build:pdf` and on the deployed site.
+- [x] **"Save as PDF" on each topic page** — a header button calling `window.print()`; the compact
+  layout lives in an `@media print` block in `input.css`. No Chromium in CI; `npm run build:pdf`
+  remains an optional local tool for generating real `.pdf` files.
 - [ ] **User feedback loop** — manually pin a GitHub Discussions thread ("What's missing or
   broken?") after the site goes live.
 

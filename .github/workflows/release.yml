@@ -22,16 +22,10 @@ jobs:
 
       - run: npm ci
 
-      - name: Install Chromium
-        run: sudo apt-get install -y chromium-browser
-
       - name: Build HTML
         run: npm run build:html
         env:
           SITE_URL: https://chairulakmal.github.io/cheatsheets
-
-      - name: Build PDFs
-        run: npm run build:pdf
 
       - name: Create dist.zip
         run: zip -r dist.zip dist/

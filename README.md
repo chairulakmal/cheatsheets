@@ -81,7 +81,9 @@ npm run build
 # Build HTML pages only (faster, skips PDF export)
 npm run build:html
 
-# Export PDF files only (requires Google Chrome or Chromium)
+# (Optional, local only) Export real PDF files — requires Google Chrome or
+# Chromium. Readers don't need this: every page has a "Save as PDF" button
+# that uses the browser's own print-to-PDF.
 npm run build:pdf
 
 # Delete all generated files and start fresh
