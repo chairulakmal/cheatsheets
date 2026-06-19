@@ -46,15 +46,14 @@ Goal: editing a markdown file triggers a rebuild in under 2 s, no manual restart
 Goal: the existing nine topics become genuinely pleasant to use, and are accessible from day one
 (retrofitting across 15+ topics later is far more expensive).
 
-- [ ] **Copy-to-clipboard buttons** on code blocks — the highest-value cheatsheet affordance.
-- [ ] **Accessibility baseline.** Semantic HTML pass + ARIA labels on interactive elements (demos,
+- [x] **Copy-to-clipboard buttons** on code blocks — the highest-value cheatsheet affordance.
+- [x] **Accessibility baseline.** Semantic HTML pass + ARIA labels on interactive elements (demos,
   nav, copy buttons). Targets Lighthouse accessibility score ≥ 90 on all nine pages. Scoped to
   structural fixes now; full audit is Phase 5.
-- [ ] **Per-page table of contents** on pages with ≥ 5 sections (Python has 13).
-- [ ] **Minimal landing page** — working topic grid, correct `<title>` and `<meta description>`
+- [x] **Per-page table of contents** on pages with ≥ 5 sections (Python has 13).
+- [x] **Minimal landing page** — working topic grid, correct `<title>` and `<meta description>`
   per page. Full visual polish belongs in Phase 5; define "done" as functional, not beautiful.
-- [ ] **Fix PDF demo rendering** — in print, hide iframes and show only the static code. Consider
-  whether `@media print` CSS covers this without needing `pdf.ts` changes at all.
+- [x] **Fix PDF demo rendering** — in print, hide iframes and show only the static code. `@media print` in input.css covers this without needing `pdf.ts` changes.
 
 **Exit criteria:** Lighthouse a11y ≥ 90 on all nine topic pages. Copy buttons work in Chrome,
 Firefox, and Safari. Every page has a valid `<title>` and `<meta description>`.

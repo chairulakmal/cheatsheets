@@ -37,6 +37,33 @@ const VUE_IMPORT_MAP = `<script type="importmap">
 }
 </script>`;
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+function extractSections(md: string): string[] {
+  return md
+    .split('\n')
+    .filter((line) => /^## /.test(line))
+    .map((line) => line.replace(/^## /, '').trim());
+}
+
+function buildToc(sections: string[]): string {
+  const items = sections
+    .map((s) => `<li><a href="#${slugify(s)}" class="text-blue-600 hover:underline text-sm">${s}</a></li>`)
+    .join('\n      ');
+  return `<nav aria-label="Table of contents" class="not-prose my-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+  <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Contents</p>
+  <ol class="list-decimal list-inside space-y-1 pl-0">
+    ${items}
+  </ol>
+</nav>`;
+}
+
 function buildDemoFile(slug: string, tsCode: string, index: number): string {
   const isJsx = JSX_TOPICS.has(slug);
   const isVue = VUE_TOPICS.has(slug);
@@ -139,11 +166,31 @@ ${js}
 </html>`;
 }
 
+const COPY_SCRIPT = `<script>
+document.querySelectorAll('.copy-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre ? pre.textContent : '').then(function() {
+      btn.textContent = 'Copied!';
+      setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+    });
+  });
+});
+</script>`;
+
 function buildMarked(highlighter: Highlighter, topic: Topic) {
   let demoIndex = 0;
 
   return new Marked({
     renderer: {
+      heading({ text, depth }) {
+        const tag = `h${depth}`;
+        if (depth === 2) {
+          return `<${tag} id="${slugify(text)}">${text}</${tag}>\n`;
+        }
+        return `<${tag}>${text}</${tag}>\n`;
+      },
+
       code({ text, lang }) {
         const language = (lang ?? '').split(':')[0];
 
@@ -161,17 +208,18 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
             theme: 'github-light',
           });
           const iframeHeight = isJsx || isVue ? 160 : 110;
-          return `<div class="not-prose my-6 rounded-xl border-2 border-blue-200 overflow-hidden shadow-sm">
+          return `<div class="not-prose code-block group relative my-6 rounded-xl border-2 border-blue-200 overflow-hidden shadow-sm">
   <div class="text-sm leading-relaxed">${highlighted}</div>
+  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button>
   <div>
     <div class="bg-slate-100 border-t border-blue-200 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500">Output</div>
-    <iframe src="${demoSrc}" sandbox="allow-scripts" loading="lazy" class="block w-full border-0" style="height:${iframeHeight}px"></iframe>
+    <iframe src="${demoSrc}" sandbox="allow-scripts" loading="lazy" title="Live demo" class="block w-full border-0" style="height:${iframeHeight}px"></iframe>
   </div>
 </div>`;
         }
 
         if (!language || language === 'text') {
-          return `<div class="not-prose my-4"><pre class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre></div>`;
+          return `<div class="not-prose code-block group relative my-4"><pre class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre><button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button></div>`;
         }
 
         try {
@@ -179,22 +227,23 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
             lang: language,
             theme: 'github-light',
           });
-          return `<div class="not-prose my-4 rounded-lg border border-slate-200 overflow-hidden text-sm leading-relaxed shadow-sm">${highlighted}</div>`;
+          return `<div class="not-prose code-block group relative my-4 rounded-lg border border-slate-200 overflow-hidden text-sm leading-relaxed shadow-sm">${highlighted}<button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button></div>`;
         } catch {
-          return `<div class="not-prose my-4"><pre class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre></div>`;
+          return `<div class="not-prose code-block group relative my-4"><pre class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre><button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button></div>`;
         }
       },
     },
   });
 }
 
-function pageHtml(title: string, content: string, css: string, nav: string): string {
+function pageHtml(title: string, content: string, css: string, nav: string, description: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
+  <meta name="description" content="${description}">
   <style>${css}</style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -207,6 +256,7 @@ function pageHtml(title: string, content: string, css: string, nav: string): str
   <main class="max-w-3xl mx-auto px-6 py-10">
     <div class="prose prose-slate max-w-none">${content}</div>
   </main>
+  ${COPY_SCRIPT}
 </body>
 </html>`;
 }
@@ -233,6 +283,7 @@ function buildIndexPage(css: string): string {
     `<p class="lead">Quick-reference guides for programming languages and frameworks.</p>${content}`,
     css,
     '',
+    'Quick-reference developer cheatsheets for popular programming languages and frameworks, with live demos and code examples.',
   );
 }
 
@@ -258,11 +309,15 @@ async function main() {
     const titleMatch = md.match(/^# (.+)$/m);
     const title = titleMatch ? titleMatch[1] : topic.title;
     const mdBody = md.replace(/^# .+\n?/, '');
-    const nav = `<nav class="mb-3"><a href="../../index.html" class="text-sm text-blue-600 hover:underline">← All Cheatsheets</a></nav>`;
+    const nav = `<nav aria-label="Breadcrumb" class="mb-3"><a href="../../index.html" class="text-sm text-blue-600 hover:underline">← All Cheatsheets</a></nav>`;
+
+    const sections = extractSections(mdBody);
+    const toc = sections.length >= 5 ? buildToc(sections) : '';
 
     const marked = buildMarked(highlighter, topic);
     const content = await marked.parse(mdBody);
-    const html = pageHtml(title, content, css, nav);
+    const description = `Quick-reference ${topic.title} cheatsheet with syntax examples${topic.live ? ' and live demos' : ''}.`;
+    const html = pageHtml(title, toc + content, css, nav, description);
 
     const outDir = join(root, 'dist', topic.slug);
     mkdirSync(outDir, { recursive: true });

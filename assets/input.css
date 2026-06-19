@@ -6,3 +6,14 @@
 .shiki {
   padding: 0.75rem 1rem;
 }
+
+/* Show copy button when the code block is hovered or focused-within. */
+.code-block:hover .copy-btn,
+.code-block:focus-within .copy-btn {
+  opacity: 1;
+}
+
+/* In print/PDF: hide iframes; the static code above them is already visible. */
+@media print {
+  iframe { display: none !important; }
+}

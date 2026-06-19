@@ -26,11 +26,10 @@ Each cheatsheet is a single page with short code examples and plain-English expl
 
 ## Where this project is headed
 
-All nine cheatsheets are written. The plan from here focuses on making the project solid *before*
-adding more — see `TODO.md` for the detailed checklist. In short:
+All nine cheatsheets are written and the core tooling is in place. See `TODO.md` for the full checklist. In short:
 
-1. **Better tooling** — automatic checks that catch mistakes, and a watch mode that rebuilds pages as you edit.
-2. **Nicer to read** — copy-to-clipboard buttons, an in-page table of contents, and download links for the PDFs.
+1. ~~**Better tooling** — automatic checks that catch mistakes, and a watch mode that rebuilds pages as you edit.~~ ✓ Done — `npm run validate`, `npm run dev`, GitHub Actions CI.
+2. ~~**Nicer to read** — copy-to-clipboard buttons, an in-page table of contents, and meta descriptions.~~ ✓ Done — copy buttons on every code block, per-page TOC, `<meta description>` on every page.
 3. **Published online** — host the cheatsheets on the web so you don't have to build them yourself.
 4. **More topics** — HTML, CSS, Git, SQL, Go, Rust, and Docker, in the same beginner-friendly style.
 5. **Easier to browse** — search across all cheatsheets, a dark mode, and an accessibility pass.
@@ -63,6 +62,9 @@ You need [Node.js](https://nodejs.org) (version 18 or newer) installed.
 # Install dependencies (only needed once)
 npm install
 
+# Watch src/ and assets/ — rebuilds HTML on every change
+npm run dev
+
 # Build all cheatsheets (HTML + PDF)
 npm run build
 
@@ -75,11 +77,12 @@ npm run build:pdf
 # Delete all generated files and start fresh
 npm run clean
 
+# Run the content linter (catches untagged fences, missing H1s, etc.)
+npm run validate
+
 # Check for TypeScript errors and linting
 npm run check
 ```
-
-`npm run dev` (watch mode) is planned but not yet available.
 
 ### Project layout
 
