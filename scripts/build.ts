@@ -272,8 +272,8 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
 
   const metaLine = slug && lastUpdated
     ? `<div class="flex items-center gap-4 mt-2">
-        <span class="text-xs text-slate-400">Updated ${lastUpdated}</span>
-        <a href="./${slug}-cheatsheet.pdf" download class="text-xs text-blue-500 hover:underline">↓ PDF</a>
+        <span class="text-xs text-slate-500">Updated ${lastUpdated}</span>
+        <a href="./${slug}-cheatsheet.pdf" download class="text-xs text-blue-600 hover:underline">↓ PDF</a>
       </div>`
     : '';
 
@@ -353,7 +353,7 @@ async function main() {
     const titleMatch = md.match(/^# (.+)$/m);
     const title = titleMatch ? titleMatch[1] : topic.title;
     const mdBody = md.replace(/^# .+\n?/, '');
-    const nav = `<nav aria-label="Breadcrumb" class="mb-3"><a href="../../index.html" class="text-sm text-blue-600 hover:underline">← All Cheatsheets</a></nav>`;
+    const nav = `<nav aria-label="Breadcrumb" class="mb-3"><a href="../index.html" class="text-sm text-blue-600 hover:underline">← All Cheatsheets</a></nav>`;
 
     const sections = extractSections(mdBody);
     const toc = sections.length >= 5 ? buildToc(sections) : '';
