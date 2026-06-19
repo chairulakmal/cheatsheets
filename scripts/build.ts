@@ -67,9 +67,17 @@ function extractSections(md: string): string[] {
     .map((line) => line.replace(/^## /, '').trim());
 }
 
+function tocLabel(raw: string): string {
+  return raw
+    .replace(/`([^`]*)`/g, '$1')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function buildToc(sections: string[]): string {
   const items = sections
-    .map((s) => `<li><a href="#${slugify(s)}" class="text-blue-600 hover:underline text-sm">${s}</a></li>`)
+    .map((s) => `<li><a href="#${slugify(s)}" class="text-blue-600 hover:underline text-sm">${tocLabel(s)}</a></li>`)
     .join('\n      ');
   return `<nav aria-label="Table of contents" class="not-prose my-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
   <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Contents</p>
@@ -198,12 +206,15 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
 
   return new Marked({
     renderer: {
-      heading({ text, depth }) {
+      heading({ depth, raw, tokens }) {
         const tag = `h${depth}`;
+        const plainRaw = raw.replace(/^#+\s+/, '').trim();
+        // text is raw markdown in Marked v14 — parse inline tokens to get HTML
+        const inner = this.parser.parseInline(tokens ?? []);
         if (depth === 2) {
-          return `<${tag} id="${slugify(text)}">${text}</${tag}>\n`;
+          return `<${tag} id="${slugify(plainRaw)}">${inner}</${tag}>\n`;
         }
-        return `<${tag}>${text}</${tag}>\n`;
+        return `<${tag}>${inner}</${tag}>\n`;
       },
 
       code({ text, lang }) {
