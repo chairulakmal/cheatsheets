@@ -19,6 +19,9 @@ Each cheatsheet is a single page with short code examples and plain-English expl
 | Ruby on Rails | No (code + expected output shown) | Available |
 | Elixir | No (code + expected output shown) | Available |
 | Python | No (code + expected output shown) | Available |
+| TypeScript Patterns | No | Available |
+| Vue Patterns | No | Available |
+| Nuxt Patterns | No | Available |
 
 "Live examples" means you can see the code run directly on the page. Languages that run on a server (like Ruby and Elixir) show the expected output as a comment instead.
 

@@ -14,4 +14,7 @@ export const topics: Topic[] = [
   { slug: "rails", title: "Rails", live: false },
   { slug: "elixir", title: "Elixir", live: false },
   { slug: "python", title: "Python", live: false },
+  { slug: "typescript-patterns", title: "TypeScript Patterns", live: false },
+  { slug: "vue-patterns", title: "Vue Patterns", live: false },
+  { slug: "nuxt-patterns", title: "Nuxt Patterns", live: false },
 ];

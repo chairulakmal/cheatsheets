@@ -21,7 +21,7 @@ concept in one plain sentence before the code, and keep examples short.
 
 ## Current status
 
-Nine topics registered; all nine complete. Phases 1–2 shipped: content linter, CI, watch mode, copy buttons, per-page TOC, meta descriptions, PDF print fix.
+Twelve topics registered; all twelve complete. Phases 1–2 shipped: content linter, CI, watch mode, copy buttons, per-page TOC, meta descriptions, PDF print fix.
 
 **JavaScript is topic #1 in the manifest** — it is the foundation for TypeScript, React, Vue, Next.js, and Nuxt. Always list and build JavaScript before TypeScript.
 
@@ -37,6 +37,9 @@ Nine topics registered; all nine complete. Phases 1–2 shipped: content linter,
 | `src/rails/index.md` | Complete, static code + `# =>` output |
 | `src/elixir/index.md` | Complete, static code + `# =>` output |
 | `src/python/index.md` | Complete, static code + `# =>` output |
+| `src/typescript-patterns/index.md` | Complete, static — generics, utility types, discriminated unions, type narrowing, security |
+| `src/vue-patterns/index.md` | Complete, static — script setup, composables, provide/inject, security |
+| `src/nuxt-patterns/index.md` | Complete, static — useFetch, server routes, middleware, auth cookies, security |
 | `scripts/validate.ts` | Content linter — untagged fences, H1, demo/live, SHIKI_LANGS |
 | `scripts/build.ts` | Markdown → HTML (shiki, esbuild, demo iframes) |
 | `scripts/pdf.ts` | HTML → PDF (headless Chrome, compact print CSS) |

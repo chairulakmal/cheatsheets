@@ -8,7 +8,7 @@ const root = join(__dirname, '..');
 
 const SHIKI_LANGS = new Set([
   'typescript', 'javascript', 'tsx', 'jsx',
-  'ruby', 'erb', 'elixir', 'python', 'html', 'css', 'bash', 'json', 'text',
+  'ruby', 'erb', 'elixir', 'python', 'html', 'css', 'bash', 'json', 'text', 'vue',
 ]);
 
 // Matches opening ``` fences with optional language tag and info string
