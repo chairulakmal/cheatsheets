@@ -35,9 +35,7 @@ non-zero. CI passes for five consecutive commits on `main`. Both scripts finish 
 
 Goal: editing a markdown file triggers a rebuild in under 2 s, no manual restarts.
 
-- [ ] **Watch mode.** Try `nodemon --watch src --watch assets --ext md,css,ts --exec "npm run build:html"`
-  first — zero custom code. Only write `scripts/dev.ts` if browser live-reload is needed; if so,
-  reach for Browsersync before writing a custom solution. Wire `npm run dev`.
+- [x] **Watch mode.** `nodemon --watch src --watch assets --ext md,css,ts --exec "npm run build:html"` — zero custom code. Wired as `npm run dev`.
 
 **Exit criteria:** editing any `src/*.md` file triggers a visible rebuild in under 2 s.
 
