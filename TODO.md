@@ -126,6 +126,50 @@ page groups are accurate for all topics.
 
 ---
 
+## Advanced patterns accuracy fixes (do before Phase 4a)
+
+Review of `typescript-patterns`, `vue-patterns`, and `nuxt-patterns` found two real bugs in Vue
+Patterns plus several minor gaps. Fix these before adding more topics — broken examples undermine
+reader trust.
+
+### Vue Patterns — real bugs (fix first)
+
+- [x] **Pinia store missing imports.** `stores/auth.ts` example (the `useAuthStore` block) uses
+  `ref`, `computed` without importing them, and calls `$fetch` which is a Nuxt auto-import — not
+  available in a plain Vue + Pinia project. Add `import { ref, computed } from 'vue'` and replace
+  `$fetch(...)` with `fetch(...)` or add a comment that `$fetch` is Nuxt-specific (the watcher
+  cleanup example has the same `$fetch` problem).
+
+- [x] **`onWatcherCleanup` version gate missing.** Added in Vue **3.5** — a reader on 3.4 gets a
+  runtime error with no helpful message. Add "(Vue 3.5+)" to the heading or prose, matching the
+  `defineModel` treatment above it.
+
+### Vue Patterns — minor gaps (fix in same pass)
+
+- [x] **`defineEmits` typed call-signature syntax requires Vue 3.3+.** Add a brief version note
+  alongside the existing `defineModel` / `onWatcherCleanup` callouts so the page is consistent.
+
+### TypeScript Patterns — minor gaps
+
+- [x] **Missing version callouts for newer utility types.** `satisfies` is TypeScript 4.9+;
+  `Awaited` is TypeScript 4.5+. Beginners on an older tsconfig baseline will get confusing errors.
+  Add inline version notes (e.g. "TypeScript 4.9+") to those two sections.
+
+- [x] **Overload example uses `raw: true` literal type** in the second signature — a call of
+  `parse('{}', false)` would fail at the type level, which isn't obvious from the prose. Adjust
+  the prose or add a `raw: false` overload so the example is unambiguous.
+
+### Nuxt Patterns — minor improvement
+
+- [x] **CORS section could mention H3 built-ins.** The manual origin check is correct but H3
+  ships `handleCors` / `appendCorsHeaders` that handle preflight automatically. Add a one-line
+  note pointing readers to `h3`'s CORS utilities.
+
+**Exit criteria:** no imports are missing from any example, all version-gated APIs carry a version
+note, and `npm run validate` still passes.
+
+---
+
 ## Someday / maybe
 
 Ideas worth noting but not committed. Revisit only if there is clear user demand.

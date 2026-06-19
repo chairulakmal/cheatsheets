@@ -39,7 +39,7 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 ```
 
-## defineEmits with TypeScript
+## defineEmits with TypeScript (Vue 3.3+)
 
 Typed emits catch mismatched event names and payload types at compile time.
 
@@ -222,13 +222,15 @@ Pinia is Vue's official store; a setup store mirrors `<script setup>` — refs a
 
 ```typescript
 // stores/auth.ts
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const isLoggedIn = computed(() => user.value !== null)
   async function login(creds: Credentials) {
-    user.value = await $fetch('/api/login', { method: 'POST', body: creds })
+    const res = await fetch('/api/login', { method: 'POST', body: JSON.stringify(creds) })
+    user.value = await res.json()
   }
   function logout() { user.value = null }
   return { user, isLoggedIn, login, logout }
@@ -317,7 +319,7 @@ const map = markRaw(new MapLibreInstance())
 </template>
 ```
 
-## Watcher cleanup
+## Watcher cleanup (Vue 3.5+)
 
 `onWatcherCleanup` cancels stale async work when a watched source changes again — prevents race conditions and leaks.
 
@@ -327,9 +329,10 @@ import { watch, onWatcherCleanup } from 'vue'
 watch(query, async (q) => {
   const controller = new AbortController()
   onWatcherCleanup(() => controller.abort()) // abort the previous request
-  results.value = await $fetch('/api/search', {
-    query: { q }, signal: controller.signal,
+  const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
+    signal: controller.signal,
   })
+  results.value = await res.json()
 })
 ```
 

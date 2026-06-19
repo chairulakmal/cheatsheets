@@ -294,7 +294,7 @@ export default defineEventHandler(async (event) => {
 
 ## Security — CORS and CSRF on server routes
 
-Nuxt server routes are accessible to any origin by default — configure CORS explicitly and use CSRF tokens for state-changing requests.
+Nuxt server routes are accessible to any origin by default — configure CORS explicitly and use CSRF tokens for state-changing requests. For preflight handling, H3 ships `handleCors` / `appendCorsHeaders` as a higher-level alternative to the manual check below.
 
 ```typescript
 // server/api/data.post.ts

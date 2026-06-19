@@ -77,7 +77,7 @@ type RoleMap = Record<'admin' | 'editor' | 'viewer', boolean>;
 
 ## Utility types — function introspection
 
-Extract type information from existing functions without duplicating type declarations.
+Extract type information from existing functions without duplicating type declarations. `Awaited` (TypeScript 4.5+) unwraps a `Promise` to its resolved type.
 
 ```typescript
 async function fetchUser(id: number): Promise<{ name: string }> {
@@ -202,7 +202,7 @@ const config = { host: 'localhost', port: 3000 } as const;
 // { readonly host: 'localhost'; readonly port: 3000 }
 ```
 
-## `satisfies` operator
+## `satisfies` operator (TypeScript 4.9+)
 
 `satisfies` validates that a value matches a type without widening the inferred literal types.
 
@@ -255,12 +255,14 @@ Overload signatures describe multiple call shapes for one function, giving a pre
 ```typescript
 function parse(input: string): object
 function parse(input: string, raw: true): string
+function parse(input: string, raw: false): object
 function parse(input: string, raw?: boolean): object | string {
   return raw ? input : JSON.parse(input)
 }
 
-const obj = parse('{}')        // object
-const str = parse('{}', true)  // string
+const obj = parse('{}')         // object
+const str = parse('{}', true)   // string
+const obj2 = parse('{}', false) // object
 ```
 
 ## never and exhaustiveness checking
