@@ -2,123 +2,80 @@
 
 [![Deploy](https://img.shields.io/github/deployments/chairulakmal/cheatsheets/github-pages?label=deploy)](https://cheat.chairulakmal.com/)
 
-> **Note:** the deploy badge stays red until the repository is made public and GitHub Pages is enabled (Settings → Pages → Source: GitHub Actions). GitHub Pages requires a public repo on the free plan.
+Quick-reference guides for programming languages and frameworks — one page per topic, plain English, short examples you can copy and run right away.
 
-A collection of quick-reference guides for programming languages and frameworks — written for beginners who want a handy reference while they learn.
-
-Each cheatsheet is a single page with short code examples and plain-English explanations. Open it in a browser and keep it beside your editor while you code.
+**[Open the cheatsheets →](https://cheat.chairulakmal.com/)**
 
 ---
 
-## What's covered
+## What's inside
 
-| Topic | Live examples? | Status |
-|-------|---------------|--------|
-| JavaScript | Yes | Available |
-| TypeScript | Yes | Available |
-| React | Yes | Available |
-| Next.js | Yes | Available |
-| Vue | Yes | Available |
-| Nuxt | Yes | Available |
-| Ruby on Rails | No (code + expected output shown) | Available |
-| Elixir | No (code + expected output shown) | Available |
-| Python | No (code + expected output shown) | Available |
-| TypeScript Patterns | No | Available |
-| Vue Patterns | No | Available |
-| Nuxt Patterns | No | Available |
+| Topic | Runnable examples? |
+|-------|-------------------|
+| JavaScript | Yes — code runs in the page |
+| TypeScript | Yes — code runs in the page |
+| React | Yes — code runs in the page |
+| Next.js | Yes — code runs in the page |
+| Vue | Yes — code runs in the page |
+| Nuxt | Yes — code runs in the page |
+| Ruby on Rails | No — expected output shown as comments |
+| Elixir | No — expected output shown as comments |
+| Python | No — expected output shown as comments |
+| TypeScript Patterns | No |
+| Vue Patterns | No |
+| Nuxt Patterns | No |
 
-"Live examples" means you can see the code run directly on the page. Languages that run on a server (like Ruby and Elixir) show the expected output as a comment instead.
-
-The **Patterns** sheets (TypeScript, Vue, Nuxt) go beyond the basics — they cover the scalability and security topics commonly expected of intermediate engineers.
+The **Patterns** sheets (TypeScript, Vue, Nuxt) go a step further — they cover patterns and pitfalls that come up at the intermediate level, including scalability and security topics.
 
 ---
 
-## Where this project is headed
+## How to read them
 
-All twelve cheatsheets are written and the core tooling is in place. See `TODO.md` for the full checklist. In short:
+Go to **[cheat.chairulakmal.com](https://cheat.chairulakmal.com/)** and pick a topic. That's it — no account, no install, no login.
 
-1. ~~**Better tooling** — automatic checks that catch mistakes, and a watch mode that rebuilds pages as you edit.~~ ✓ Done — `npm run validate`, `npm run dev`, GitHub Actions CI.
-2. ~~**Nicer to read** — copy-to-clipboard buttons, an in-page table of contents, and meta descriptions.~~ ✓ Done — copy buttons on every code block, per-page TOC, `<meta description>` on every page.
-3. ~~**Published online** — host the cheatsheets on the web so you don't have to build them yourself.~~ ✓ Done — auto-deploys to GitHub Pages on every push to `main`. Pre-built ZIP attached to each GitHub Release.
-4. **More topics** — HTML, CSS, Git, SQL, Go, Rust, and Docker, in the same beginner-friendly style.
-5. **Easier to browse** — search across all cheatsheets, a dark mode, and an accessibility pass.
-
-These are tackled in order: the foundation first, new content later.
+Every page has a **"Save as PDF"** button in the header if you want an offline copy.
 
 ---
 
-## How to use
+## Something wrong or missing?
 
-Open any file from the `dist/` folder directly in your browser — for example, `dist/typescript/index.html`. That's it. The pages work without an internet connection and without JavaScript enabled.
-
-If you don't have a `dist/` folder yet, see the **For contributors** section below to build the files.
-
----
-
-## Questions or suggestions?
-
-If something is unclear or you spot a mistake, open an issue or submit a pull request. All skill levels are welcome.
+Open an issue or submit a pull request. All skill levels are welcome.
 
 ---
 
 ## For contributors
 
-### Running the project locally
-
-You need [Node.js](https://nodejs.org) (version 24 or newer — see `.nvmrc`) installed.
+You need [Node.js](https://nodejs.org) 24 or newer (see `.nvmrc`).
 
 ```bash
-# Install dependencies (only needed once)
-npm install
-
-# Watch src/ and assets/ — rebuilds HTML on every change
-npm run dev
-
-# Build all cheatsheets (HTML + PDF)
-npm run build
-
-# Build HTML pages only (faster, skips PDF export)
-npm run build:html
-
-# (Optional, local only) Export real PDF files — requires Google Chrome or
-# Chromium. Readers don't need this: every page has a "Save as PDF" button
-# that uses the browser's own print-to-PDF.
-npm run build:pdf
-
-# Delete all generated files and start fresh
-npm run clean
-
-# Run the content linter (catches untagged fences, missing H1s, etc.)
-npm run validate
-
-# Check for TypeScript errors and linting
-npm run check
+npm install          # install dependencies (once)
+npm run dev          # watch mode — rebuilds on every file save
+npm run build:html   # one-off build of all HTML pages
+npm run validate     # lint content (untagged fences, missing headings, etc.)
+npm run check        # TypeScript typecheck + ESLint
 ```
+
+### Adding a cheatsheet
+
+1. Create `src/<topic>/index.md` — one `# Title`, then `##` sections.
+2. Register the topic in `src/index.ts`.
+3. Run `npm run build:html` and open `dist/<topic>/index.html`.
+4. Run `npm run check` before submitting.
+
+Every code block needs a language tag (` ```typescript `, ` ```python `, etc.) — untagged blocks get no syntax highlighting.
 
 ### Project layout
 
 ```
 src/
-  index.ts          ← list of all topics (add new ones here)
-  <topic>/
-    index.md        ← cheatsheet content — edit this
+  index.ts          ← topic list (add new topics here)
+  <topic>/index.md  ← cheatsheet content — edit this
 scripts/
-  build.ts          ← converts markdown files into HTML pages
-  pdf.ts            ← exports HTML pages to PDF
+  build.ts          ← converts Markdown to HTML
 assets/
   input.css         ← Tailwind CSS source (edit this)
-  style.css         ← generated — do not edit, not committed to git
-dist/               ← generated output — never edit or commit
+dist/               ← generated — never edit or commit
 ```
-
-### Adding a cheatsheet
-
-1. Create `src/<topic>/index.md` with your content (one `# Title`, then `##` sections).
-2. Register the topic in `src/index.ts`.
-3. Run `npm run build:html` and open `dist/<topic>/index.html` to check it.
-4. Run `npm run check` before submitting.
-
-Every code block must have a language label (` ```typescript `, ` ```python `, etc.) — unlabelled blocks get no syntax highlighting. Keep each block to around 10 lines and explanations to one sentence.
 
 ---
 
