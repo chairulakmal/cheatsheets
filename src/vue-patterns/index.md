@@ -39,6 +39,19 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 ```
 
+## Reactive props destructure (Vue 3.5)
+
+Destructuring `defineProps` used to drop reactivity; since Vue 3.5 (now stable) the compiler rewrites each destructured binding back into a `props.x` access, so they stay reactive — and `=` gives you native defaults, replacing `withDefaults`.
+
+```vue
+<script setup lang="ts">
+const { count = 0, title } = defineProps<{ count?: number; title: string }>()
+watchEffect(() => console.log(count)) // still reactive — compiled to props.count
+</script>
+```
+
+The catch: once you *read* a destructured prop into a variable or pass it to a function, you pass a plain snapshot. To hand a prop to a composable reactively, wrap it in a getter (`() => count`) or `toRef(() => count)`.
+
 ## defineEmits with TypeScript (Vue 3.3+)
 
 Typed emits catch mismatched event names and payload types at compile time.
@@ -99,6 +112,46 @@ const { count, increment } = useCounter(10)
 </script>
 ```
 
+## Designing composables — accept refs, normalize with `toValue`
+
+A robust composable accepts a plain value, a ref, *or* a getter, and normalizes with `toValue` (Vue 3.3) — so callers pass reactive or static input interchangeably and the composable re-runs when reactive input changes.
+
+```typescript
+import { toValue, watchEffect, ref, type MaybeRefOrGetter } from 'vue'
+
+export function useFetch<T>(url: MaybeRefOrGetter<string>) {
+  const data = ref<T | null>(null)
+  watchEffect(() => {
+    fetch(toValue(url)).then(r => r.json()).then(d => (data.value = d))
+  })
+  return { data }
+}
+```
+
+Two more conventions seniors hold to: name it `useXxx`, and register its own cleanup (`onWatcherCleanup`, `onScopeDispose`) *inside* the composable so callers never have to — a composable owns its teardown.
+
+The demos below use the runtime template form (`createApp` + a template string) because a sandboxed iframe has no single-file-component compiler — the reactivity is identical to `<script setup>`.
+
+```demo
+import { createApp, ref, computed } from "vue";
+
+function useCounter(initial = 0) {
+  const count = ref(initial);
+  const doubled = computed(() => count.value * 2);
+  return { count, doubled, increment: () => count.value++ };
+}
+
+createApp({
+  template: `
+    <div>
+      <p>Count: <strong>{{ count }}</strong> (×2 = {{ doubled }})</p>
+      <button @click="increment">Add one</button>
+    </div>
+  `,
+  setup: () => useCounter(5),
+}).mount("#app");
+```
+
 ## provide / inject
 
 `provide` shares typed data from any ancestor; `inject` receives it in any descendant without prop-drilling.
@@ -117,6 +170,28 @@ const theme  = inject(ThemeKey)               // Theme | undefined
 const theme2 = inject(ThemeKey, { dark: false }) // with default, never undefined
 ```
 
+```demo
+import { createApp, ref, provide, inject, h } from "vue";
+
+const Child = {
+  setup() {
+    const theme = inject("theme");
+    return () => h("p", "Injected theme: " + theme.value);
+  },
+};
+
+createApp({
+  components: { Child },
+  template: `<div><Child /><button @click="toggle">Toggle theme</button></div>`,
+  setup() {
+    const theme = ref("light");
+    provide("theme", theme); // descendants react when this ref changes
+    const toggle = () => (theme.value = theme.value === "light" ? "dark" : "light");
+    return { toggle };
+  },
+}).mount("#app");
+```
+
 ## ref vs reactive
 
 Use `ref` for primitives and single values; use `reactive` for objects, but avoid destructuring it directly.
@@ -132,6 +207,24 @@ state.x++                     // no .value needed
 
 // Destructuring reactive loses reactivity — use toRefs
 const { x, y } = toRefs(state) // x and y remain reactive refs
+```
+
+```demo
+import { createApp, reactive, computed } from "vue";
+
+createApp({
+  template: `
+    <div>
+      Price ¥<input v-model.number="form.price" type="number" style="width:90px" />
+      <p>{{ form.address }} — total with tax: <strong>¥{{ total }}</strong></p>
+    </div>
+  `,
+  setup() {
+    const form = reactive({ address: "Shibuya", price: 5000 });
+    const total = computed(() => Math.round(form.price * 1.1));
+    return { form, total };
+  },
+}).mount("#app");
 ```
 
 ## watch vs watchEffect
@@ -153,6 +246,22 @@ watch(query, (newVal, oldVal) => {
 })
 ```
 
+## Flush timing and `nextTick`
+
+Watchers run *before* Vue patches the DOM by default (`flush: 'pre'`). When a callback must read the updated DOM — measuring an element, syncing a third-party widget — use `flush: 'post'`. `flush: 'sync'` fires synchronously on every change and can thrash; reach for it rarely.
+
+```typescript
+watch(items, () => measureHeight(), { flush: 'post' }) // runs after DOM update
+```
+
+`nextTick` is the one-off equivalent — await it to read the DOM after a change you just made.
+
+```typescript
+count.value++
+await nextTick()                       // DOM now reflects the new count
+console.log(el.value?.textContent)
+```
+
 ## Async components
 
 `defineAsyncComponent` lazily loads a component, reducing the initial bundle size.
@@ -168,6 +277,27 @@ const HeavyChart = defineAsyncComponent({
   timeout: 5000,  // show error after 5 s
 })
 ```
+
+## Suspense and async setup
+
+A component with a top-level `await` in `<script setup>` becomes async; `<Suspense>` coordinates one fallback while any number of such children resolve, so you render a single loading state instead of many.
+
+```vue
+<script setup lang="ts">
+const user = await fetchUser() // top-level await — this component is async
+</script>
+```
+
+```vue
+<template>
+  <Suspense>
+    <UserProfile />
+    <template #fallback>Loading…</template>
+  </Suspense>
+</template>
+```
+
+`<Suspense>` is still flagged experimental, so its API can shift. Pair it with `onErrorCaptured`: a rejected async setup surfaces as a thrown error that needs a boundary.
 
 ## Teleport
 
@@ -213,6 +343,27 @@ import { onMounted, onUnmounted } from 'vue'
 let timer: number
 onMounted(() => { timer = window.setInterval(poll, 1000) })
 onUnmounted(() => clearInterval(timer)) // prevent a memory leak when destroyed
+</script>
+```
+
+## defineExpose and `useTemplateRef` (Vue 3.5)
+
+A `<script setup>` component is *closed* by default — parents cannot reach its internals. `defineExpose` opts specific members into the public instance.
+
+```vue
+<script setup lang="ts">
+const inputEl = ref<HTMLInputElement | null>(null)
+function focus() { inputEl.value?.focus() }
+defineExpose({ focus }) // parent: childRef.value.focus()
+</script>
+```
+
+Vue 3.5's `useTemplateRef` replaces the name-matched template ref, decoupling the variable name from the `ref="…"` attribute — clearer in components with many refs.
+
+```vue
+<script setup lang="ts">
+import { useTemplateRef } from 'vue'
+const el = useTemplateRef('inputEl') // binds to ref="inputEl"
 </script>
 ```
 
@@ -319,6 +470,43 @@ const map = markRaw(new MapLibreInstance())
 </template>
 ```
 
+## Escaping and steering reactivity
+
+`toRaw` returns the original object behind a proxy — use it for expensive reads or identity checks where tracking is wasted. `triggerRef` forces dependents to re-run after you mutate a `shallowRef` in place.
+
+```typescript
+import { shallowRef, triggerRef, toRaw } from 'vue'
+
+const rows = shallowRef<Row[]>([])
+rows.value.push(newRow)      // shallowRef ignores nested mutation…
+triggerRef(rows)             // …so force dependents to re-run
+const raw = toRaw(reactiveObj) // unwrap the proxy, no tracking
+```
+
+`customRef` builds a ref with bespoke dependency tracking — the standard way to implement a debounced or throttled reactive value.
+
+```demo
+import { createApp, customRef } from "vue";
+
+function useDebouncedRef(initial, delay = 500) {
+  let timer, value = initial;
+  return customRef((track, trigger) => ({
+    get() { track(); return value; },
+    set(v) { clearTimeout(timer); timer = setTimeout(() => { value = v; trigger(); }, delay); },
+  }));
+}
+
+createApp({
+  template: `
+    <div>
+      <input :value="text" @input="text = $event.target.value" placeholder="type fast…" />
+      <p>Debounced (500ms): <strong>{{ text }}</strong></p>
+    </div>
+  `,
+  setup: () => ({ text: useDebouncedRef("") }),
+}).mount("#app");
+```
+
 ## Watcher cleanup (Vue 3.5+)
 
 `onWatcherCleanup` cancels stale async work when a watched source changes again — prevents race conditions and leaks.
@@ -334,6 +522,22 @@ watch(query, async (q) => {
   })
   results.value = await res.json()
 })
+```
+
+## effectScope — own a group of effects
+
+`effectScope` collects every watcher and computed created inside it so you can dispose them together. It's the primitive Pinia is built on, and the right tool for reactive logic created dynamically or living outside a component's lifecycle.
+
+```typescript
+import { effectScope, watch, ref } from 'vue'
+
+const scope = effectScope()
+scope.run(() => {
+  const x = ref(0)
+  watch(x, console.log)  // owned by this scope
+})
+
+scope.stop() // tears down every effect created inside run() at once
 ```
 
 ## Security — never use v-html with user content

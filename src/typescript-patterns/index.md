@@ -142,6 +142,29 @@ function makeSound(animal: Cat | Dog) {
 }
 ```
 
+A predicate is an *unchecked claim* — TypeScript trusts the boolean you return and does not verify it. A wrong predicate (`return 'bark' in animal` above) silently corrupts narrowing everywhere it's used, so keep the body trivially correct and consider a runtime validator (Zod) for untrusted input.
+
+## Assertion functions
+
+An `asserts` signature narrows by *throwing*: after the call returns, the compiler treats the value as the asserted type for the rest of the scope — useful for invariants and validation guards.
+
+```typescript
+function assert(cond: unknown, msg?: string): asserts cond {
+  if (!cond) throw new Error(msg ?? 'Assertion failed');
+}
+```
+
+```typescript
+function assertIsString(v: unknown): asserts v is string {
+  if (typeof v !== 'string') throw new TypeError('expected string');
+}
+
+assertIsString(input);
+input.toUpperCase(); // narrowed to string for the rest of the scope
+```
+
+Like predicates, the signature is trusted, not checked — and a function with an `asserts` return type must be annotated explicitly; inference will not add it for you.
+
 ## Conditional types
 
 A conditional type picks between two types based on a compile-time assignability check.
@@ -158,6 +181,24 @@ type ElementOf<T> = T extends (infer U)[] ? U : T;
 type C = ElementOf<string[]>; // string
 type D = ElementOf<number>;   // number
 ```
+
+## Distributive conditional types
+
+A conditional type over a *naked* type parameter distributes across each union member — it's applied once per member, then re-unioned. This bites people who don't expect it.
+
+```typescript
+type ToArray<T> = T extends unknown ? T[] : never;
+type R = ToArray<string | number>; // string[] | number[] — NOT (string | number)[]
+```
+
+Wrap both sides in a one-tuple to switch distribution off and treat the union as a whole.
+
+```typescript
+type ToArrayWhole<T> = [T] extends [unknown] ? T[] : never;
+type R2 = ToArrayWhole<string | number>; // (string | number)[]
+```
+
+This `[T] extends [U]` trick is also how you write conditions that should compare the *whole* union — e.g. an `IsNever<T>` check, which a naked parameter would get wrong.
 
 ## Mapped types
 
@@ -315,6 +356,91 @@ function sum(nums: readonly number[]): number {
 
 const config: ReadonlyArray<string> = ['a', 'b']
 // config[0] = 'c' // Error
+```
+
+## `interface` vs `type` — when to reach for which
+
+For a plain object shape they're nearly interchangeable; the senior decision turns on three things. `interface` declarations **merge** — two with the same name combine, which is how you augment third-party types.
+
+```typescript
+interface Animal { name: string }
+interface Animal { age: number } // merged — Animal has both
+```
+
+`type` aliases cannot merge (a redeclaration is an error) but can express what interfaces can't: unions, tuples, mapped and conditional types. Guidance: use `interface` for public object/class contracts (mergeable, faster on large `extends` chains, clearer error messages); use `type` for unions, tuples, and anything computed.
+
+## Variance and the `in` / `out` modifiers (TS 4.7)
+
+Variance is *why* a `Dog[]` is assignable to an `Animal[]` but a function taking `Animal` is assignable where one taking `Dog` is expected (params are contravariant, returns covariant). You can annotate intended variance on a generic parameter to document it and get earlier, clearer errors.
+
+```typescript
+interface Producer<out T> { get(): T }        // covariant — only produces T
+interface Consumer<in T> { set(value: T): void } // contravariant — only consumes T
+```
+
+This pairs with `strictFunctionTypes`, which makes function-parameter checks contravariant (sound) instead of bivariant. Method parameters stay bivariant for ergonomic reasons — a real soundness hole worth knowing.
+
+## `const` type parameters (TS 5.0)
+
+A `const` type parameter infers the narrowest literal type from the argument, so callers no longer need `as const` at every call site.
+
+```typescript
+function asTuple<const T extends readonly unknown[]>(t: T): T { return t; }
+
+const r = asTuple(['a', 'b']); // readonly ['a', 'b'] — no `as const` needed
+```
+
+## Variadic tuple types
+
+Spread elements inside tuple types model variable-length argument lists — the backbone of typing `concat`, `compose`, `curry`, and `Function.bind`.
+
+```typescript
+type Concat<A extends unknown[], B extends unknown[]> = [...A, ...B];
+type R = Concat<[1, 2], [3, 4]>; // [1, 2, 3, 4]
+```
+
+```typescript
+function tail<T extends unknown[]>(arr: readonly [unknown, ...T]): T {
+  return arr.slice(1) as T;
+}
+const t = tail([1, 'a', true] as const); // ['a', true] (readonly)
+```
+
+## Forcing evaluation — the `Prettify` trick
+
+Intersections and deep generics render as unreadable `A & B & …` in editor tooltips. Mapping over the keys and intersecting `& {}` makes TypeScript eagerly flatten the type — purely a DX aid, with no runtime or semantic effect.
+
+```typescript
+type Prettify<T> = { [K in keyof T]: T[K] } & {};
+
+type Messy = { a: number } & { b: string };
+type Clean = Prettify<Messy>; // shows as { a: number; b: string }
+```
+
+## Compiler strictness — the flags `strict` doesn't include
+
+`strict: true` is table stakes. These extra flags catch a class of bugs it leaves on the table.
+
+```json
+{
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true
+  }
+}
+```
+
+`noUncheckedIndexedAccess` is the highest-value one: it adds `| undefined` to every index access (`arr[i]`, `record[key]`), forcing you to handle the missing case the type system otherwise pretends can't happen. `exactOptionalPropertyTypes` distinguishes a missing property from one explicitly set to `undefined`.
+
+## Type-checker performance
+
+Conditional and recursive types are re-evaluated on every check, so they can dominate build time and IDE latency. Seniors watch recursion depth (TS caps non-tail recursion around 50 instantiations), prefer `interface extends` over large intersection chains, and avoid gratuitous deep generics in hot library types.
+
+```bash
+tsc --noEmit --extendedDiagnostics   # instantiation counts + check time
+tsc --generateTrace trace            # flame-graph the type checker in trace/
 ```
 
 ## Security — `unknown` instead of `any`

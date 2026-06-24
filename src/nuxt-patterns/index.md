@@ -1,5 +1,25 @@
 # Nuxt Patterns
 
+## Nuxt 4 project structure
+
+Nuxt 4 moved application code into an `app/` directory by default (`app/pages`, `app/components`, `app/composables`), separating the Vue layer from `server/`, root config, and a new `shared/` folder for code both sides import. This sharpens the client/server boundary and speeds up file watching.
+
+```bash
+app/          # Vue app: pages, components, composables, layouts
+server/       # Nitro: api routes, middleware, plugins, utils
+shared/       # code safe to import from both client and server
+nuxt.config.ts
+```
+
+Migrating from Nuxt 3? Opt into the new defaults incrementally, then drop the flag once you're fully on v4.
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  future: { compatibilityVersion: 4 },
+})
+```
+
 ## useFetch vs useAsyncData
 
 `useFetch` is shorthand for `useAsyncData` + `$fetch`; use `useAsyncData` when you need a custom fetcher or want full control over the cache key.
@@ -17,6 +37,17 @@ const { data } = await useAsyncData('users', () =>
 )
 ```
 
+## How Nuxt data fetching actually runs
+
+`useFetch`/`useAsyncData` run **on the server during SSR**, serialize the result into the page payload, and the client **reuses it on hydration** rather than refetching. The explicit key dedupes concurrent callers and powers that payload reuse — omit it and Nuxt derives one from the call site, which can collide or duplicate.
+
+```typescript
+// Same key → one request, shared result, no second fetch on hydration
+const { data } = await useAsyncData('user:42', () => $fetch('/api/users/42'))
+```
+
+Two senior rules: always `await` these in `<script setup>` (they block render by design), and never call them inside event handlers or `onMounted` — reach for plain `$fetch` there. Use `transform`/`pick` to shrink what lands in the payload, since everything you return is serialized to the client.
+
 ## $fetch for non-reactive requests
 
 Use `$fetch` directly for mutations (POST/PUT/DELETE) or one-shot requests that don't need caching or SSR.
@@ -31,6 +62,15 @@ async function createPost(title: string) {
 }
 ```
 
+## Server-side `$fetch` skips the network
+
+When `$fetch` calls one of your own `/api/*` routes *during server render*, Nitro invokes the handler function directly — no HTTP round-trip, no extra socket. Internal API calls in SSR are nearly free, which is also why `useRequestFetch` exists: to forward the original request's headers into that direct call.
+
+```typescript
+// During SSR this does NOT open a real connection to localhost
+const stats = await $fetch('/api/stats') // direct Nitro handler invocation
+```
+
 ## Server routes
 
 Files in `server/api/` are automatically exposed as API endpoints — the filename encodes the HTTP method.
@@ -43,6 +83,26 @@ export default defineEventHandler(async (event) => {
   const body  = await readBody(event)    // parsed JSON body
 
   return { id }                          // auto-serialised as JSON
+})
+```
+
+## Server middleware and Nitro plugins
+
+Files in `server/middleware/` run on **every** server request with no routing — the place for request logging, header parsing, or attaching `event.context.user`. They must not return a value (returning ends the request).
+
+```typescript
+// server/middleware/context.ts
+export default defineEventHandler((event) => {
+  event.context.user = parseUser(getHeader(event, 'authorization'))
+})
+```
+
+A Nitro plugin (`server/plugins/`) runs once at server startup — use it to open a database connection or hook Nitro lifecycle events like `render:html` or `close`.
+
+```typescript
+// server/plugins/db.ts
+export default defineNitroPlugin((nitro) => {
+  nitro.hooks.hook('close', () => db.disconnect())
 })
 ```
 
@@ -82,6 +142,18 @@ definePageMeta({
 </script>
 ```
 
+## Route validation
+
+`definePageMeta({ validate })` rejects invalid route params before the page renders — returning `false` (or a `createError`) triggers a 404, keeping malformed URLs out of your data layer entirely.
+
+```vue
+<script setup lang="ts">
+definePageMeta({
+  validate: (route) => /^\d+$/.test(route.params.id as string),
+})
+</script>
+```
+
 ## useState
 
 `useState` creates SSR-safe shared state — the value is serialised with the page payload so the client gets the exact same value, avoiding hydration mismatches.
@@ -94,6 +166,38 @@ export const useTheme = () =>
 // In any component
 const theme = useTheme()
 theme.value = 'dark' // reactive and shared across all components on this page
+```
+
+## callOnce — run logic exactly once
+
+`callOnce` (Nuxt 3.9+) runs a block a single time during SSR and skips it on client hydration — for one-time setup like seeding a store or firing a server-side event that must not run twice.
+
+```typescript
+const store = useStore()
+await callOnce('init-store', async () => {
+  store.items = await $fetch('/api/items') // runs once, on the server
+})
+```
+
+## Client- and server-only code
+
+Reading `window`, `localStorage`, or `document` during SSR crashes the render. Guard browser-only logic with `import.meta.client` (and server-only work with `import.meta.server`), or defer it to `onMounted`, which never runs on the server.
+
+```typescript
+if (import.meta.client) {
+  localStorage.setItem('seen', '1') // browser-only, skipped during SSR
+}
+```
+
+For markup that can only render in the browser — a map, a chart that measures element size — wrap it in `<ClientOnly>` with a fallback to avoid hydration mismatches.
+
+```vue
+<template>
+  <ClientOnly>
+    <MapView />
+    <template #fallback><MapSkeleton /></template>
+  </ClientOnly>
+</template>
 ```
 
 ## useCookie
@@ -224,6 +328,21 @@ export default cachedEventHandler(
   { maxAge: 60 * 5 } // cache for 5 minutes
 )
 ```
+
+## Nitro cache storage and SWR
+
+`cachedEventHandler` and `defineCachedFunction` store results in a Nitro storage layer — in-memory by default, but point it at Redis or a KV driver so the cache survives restarts and is shared across instances.
+
+```typescript
+// nuxt.config.ts — back the cache with Redis in production
+export default defineNuxtConfig({
+  nitro: {
+    storage: { cache: { driver: 'redis', url: process.env.REDIS_URL } },
+  },
+})
+```
+
+In `routeRules`, `swr: 3600` serves a cached response instantly while revalidating in the background (stale-while-revalidate) — distinct from `isr`, which persists the rendered page to the CDN/edge.
 
 ## Pinia with SSR hydration
 

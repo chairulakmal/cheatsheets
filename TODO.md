@@ -10,6 +10,20 @@ previous one is done.
 
 ---
 
+## Deviations from the plan (keep honest)
+
+- **An "Advanced" (senior-level) tier now exists**, exempt from the beginner-prose convention:
+  `react-vs-vue` plus five Patterns sheets — `typescript-patterns`, `react-patterns`,
+  `nextjs-patterns`, `vue-patterns`, `nuxt-patterns`. All shipped off-roadmap (user-requested);
+  the three original Patterns sheets were reclassified from "intermediate" to senior-level. These
+  carry `advanced: true` in `src/index.ts` and render in a separate "Advanced" section on the
+  homepage. Documented in `CLAUDE.md` (audience section) and `README.md`.
+- **Topic count is now 15**, which crosses the Phase 5 unlock threshold (≥ 15). Note the project's
+  Foundation-first ordering: Phase 4a/4b coverage topics (HTML, CSS, Git, SQL, Bash) are still
+  unstarted, so the Advanced tier grew the count ahead of that planned beginner coverage.
+
+---
+
 ## Phase 1 — Validate & CI (correctness gate)
 
 Goal: mistakes are caught by machine before they ship. Nothing else starts until CI is green.
@@ -120,6 +134,12 @@ Goal: the collection stays navigable as it grows.
 - [ ] **Dark mode** toggle.
 - [ ] **Full accessibility audit** — keyboard navigation, contrast ratios, screen-reader labels
   across all topics.
+- [~] **Editable demo playground.** Tier-1 prototype **shipped on `vue-patterns`** (off-roadmap,
+  user-requested): "✎ Edit code" → editable textarea → "▶ Run" transpiles in-browser via Sucrase
+  (lazy-loaded) and re-renders the preview iframe. See `PLAYGROUND_TOPICS` / `PLAYGROUND_SCRIPT` in
+  `build.ts` and the CLAUDE.md "Editable playground" note. Remaining to generalize (Tier 2): add the
+  JSX transform + React import map for `react-patterns`, swap the textarea for CodeMirror, and decide
+  whether the compiler weight is worth shipping site-wide given the "small generator" ethos.
 
 **Exit criteria:** Pagefind returns correct results for ten representative test queries. Landing
 page groups are accurate for all topics.

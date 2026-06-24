@@ -10,6 +10,10 @@ Quick-reference guides for programming languages and frameworks — one page per
 
 ## What's inside
 
+### Beginner sheets
+
+Plain-English, one-concept-at-a-time references — the main collection.
+
 | Topic | Runnable examples? |
 |-------|-------------------|
 | JavaScript | Yes — code runs in the page |
@@ -21,11 +25,21 @@ Quick-reference guides for programming languages and frameworks — one page per
 | Ruby on Rails | No — expected output shown as comments |
 | Elixir | No — expected output shown as comments |
 | Python | No — expected output shown as comments |
-| TypeScript Patterns | No |
-| Vue Patterns | No |
-| Nuxt Patterns | No |
 
-The **Patterns** sheets (TypeScript, Vue, Nuxt) go a step further — they cover patterns and pitfalls that come up at the intermediate level, including scalability and security topics.
+### Advanced (senior-level)
+
+Deeper deep-dives written in fuller prose — patterns, pitfalls, and tradeoffs rather than one-line intros. Aimed at engineers who already know the basics.
+
+| Topic | Runnable examples? |
+|-------|-------------------|
+| TypeScript Patterns | No |
+| React Patterns | Yes — code runs in the page |
+| Next.js Patterns | No |
+| Vue Patterns | Yes — code runs in the page |
+| Nuxt Patterns | No |
+| React vs Vue | No |
+
+The **Patterns** sheets (TypeScript, React, Next.js, Vue, Nuxt) cover patterns and pitfalls — including performance, scalability, and security topics. **React vs Vue** is a side-by-side deep dive into both reactivity models and their tradeoffs.
 
 ---
 

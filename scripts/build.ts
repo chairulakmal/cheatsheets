@@ -15,8 +15,13 @@ const SHIKI_LANGS = [
   'ruby', 'erb', 'elixir', 'python', 'html', 'css', 'bash', 'json', 'text', 'vue',
 ] as const;
 
-const JSX_TOPICS = new Set(['react', 'nextjs']);
-const VUE_TOPICS = new Set(['vue', 'nuxt']);
+const JSX_TOPICS = new Set(['react', 'nextjs', 'react-patterns']);
+const VUE_TOPICS = new Set(['vue', 'nuxt', 'vue-patterns']);
+
+// Tier-1 editable playground (prototype). Topics here render demos as an editable
+// source + "Run" that transpiles in-browser (Sucrase, lazy-loaded) and re-renders.
+// Currently Vue-only — the playground script injects the Vue import map.
+const PLAYGROUND_TOPICS = new Set(['vue-patterns']);
 
 // Set SITE_URL env var at build time to enable absolute OG URLs and canonical links.
 const SITE_URL = (process.env.SITE_URL ?? '').replace(/\/$/, '');
@@ -36,9 +41,9 @@ function getLastUpdated(filePath: string): string {
 const REACT_IMPORT_MAP = `<script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@18.3.1",
-    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
-    "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime"
+    "react": "https://esm.sh/react@19.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
+    "react/jsx-runtime": "https://esm.sh/react@19.2.0/jsx-runtime"
   }
 }
 </script>`;
@@ -47,7 +52,7 @@ const REACT_IMPORT_MAP = `<script type="importmap">
 const VUE_IMPORT_MAP = `<script type="importmap">
 {
   "imports": {
-    "vue": "https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.esm-browser.js"
+    "vue": "https://cdn.jsdelivr.net/npm/vue@3.5.35/dist/vue.esm-browser.js"
   }
 }
 </script>`;
@@ -70,6 +75,13 @@ function extractSections(md: string): string[] {
 function tocLabel(raw: string): string {
   return raw
     .replace(/`([^`]*)`/g, '$1')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function escapeHtml(raw: string): string {
+  return raw
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
@@ -201,6 +213,80 @@ document.querySelectorAll('.copy-btn').forEach(function(btn) {
 });
 </script>`;
 
+// Tier-1 editable playground. Reveals an editable copy of the demo source, then on
+// "Run" transpiles it in the browser with Sucrase (lazy-loaded, TypeScript strip only)
+// and re-renders by swapping the preview iframe's srcdoc. Vue-only for now: the preview
+// document embeds the Vue import map (keep the version in sync with VUE_IMPORT_MAP).
+const PLAYGROUND_SCRIPT = `<script>
+(function () {
+  var IMPORT_MAP = '<script type="importmap">{ "imports": { "vue": "https://cdn.jsdelivr.net/npm/vue@3.5.35/dist/vue.esm-browser.js" } }<\\/script>';
+  var STYLE = '<style>body{font-family:system-ui,sans-serif;font-size:13px;margin:0;padding:12px 16px;background:#fff;color:#1e293b}.err{color:#dc2626;font-family:monospace;font-size:12px;white-space:pre-wrap}</style>';
+
+  function previewDoc(code) {
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' + IMPORT_MAP + STYLE +
+      '</head><body><div id="app"></div>' +
+      '<script>window.onerror=function(m){var a=document.getElementById("app");if(a){a.innerHTML="<span class=err>Error: "+m+"</span>";}return true;};<\\/script>' +
+      '<script type="module">' + code + '<\\/script></body></html>';
+  }
+  function errorDoc(msg) {
+    return '<!DOCTYPE html><html><head><meta charset="UTF-8">' + STYLE + '</head><body><pre class="err">' + msg + '</pre></body></html>';
+  }
+
+  var sucrase;
+  function loadSucrase() {
+    if (!sucrase) {
+      sucrase = import('https://esm.sh/sucrase@3.35.0').then(function (m) {
+        return m.transform || (m.default && m.default.transform);
+      });
+    }
+    return sucrase;
+  }
+
+  document.querySelectorAll('.playground').forEach(function (pg) {
+    var display = pg.querySelector('.pg-display');
+    var src = pg.querySelector('.pg-src');
+    var preview = pg.querySelector('.pg-preview');
+    var editBtn = pg.querySelector('.pg-edit');
+    var runBtn = pg.querySelector('.pg-run');
+    var resetBtn = pg.querySelector('.pg-reset');
+    var originalSrc = preview.getAttribute('src');
+
+    function autosize() { src.style.height = 'auto'; src.style.height = (src.scrollHeight + 2) + 'px'; }
+
+    editBtn.addEventListener('click', function () {
+      display.classList.add('hidden');
+      src.classList.remove('hidden');
+      runBtn.classList.remove('hidden');
+      resetBtn.classList.remove('hidden');
+      editBtn.classList.add('hidden');
+      autosize();
+      src.focus();
+    });
+
+    runBtn.addEventListener('click', function () {
+      runBtn.textContent = '… compiling';
+      loadSucrase().then(function (transform) {
+        var code = transform(src.value, { transforms: ['typescript'] }).code;
+        preview.removeAttribute('src');
+        preview.srcdoc = previewDoc(code);
+      }).catch(function (e) {
+        preview.removeAttribute('src');
+        preview.srcdoc = errorDoc(String((e && e.message) || e).replace(/</g, '&lt;'));
+      }).then(function () { runBtn.textContent = '▶ Run'; });
+    });
+
+    resetBtn.addEventListener('click', function () {
+      src.value = src.defaultValue;
+      autosize();
+      preview.removeAttribute('srcdoc');
+      preview.setAttribute('src', originalSrc);
+    });
+
+    src.addEventListener('input', autosize);
+  });
+})();
+</script>`;
+
 function buildMarked(highlighter: Highlighter, topic: Topic) {
   let demoIndex = 0;
 
@@ -234,6 +320,26 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
             theme: 'github-light',
           });
           const iframeHeight = isJsx || isVue ? 160 : 110;
+
+          // Editable playground (prototype topics): static highlighted code +
+          // an editable textarea revealed by "Edit", transpiled + re-rendered on "Run".
+          if (PLAYGROUND_TOPICS.has(topic.slug)) {
+            return `<div class="not-prose code-block group relative my-6 rounded-xl border-2 border-blue-200 overflow-hidden shadow-sm playground">
+  <div class="text-sm leading-relaxed pg-display">${highlighted}</div>
+  <textarea class="pg-src hidden no-print block w-full font-mono text-xs leading-relaxed p-4 bg-slate-50 border-0 resize-none focus:outline-none" spellcheck="false" aria-label="Editable demo source">${escapeHtml(text)}</textarea>
+  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button>
+  <div class="pg-toolbar no-print flex gap-2 bg-slate-100 border-t border-blue-200 px-3 py-2">
+    <button type="button" class="pg-edit px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">✎ Edit code</button>
+    <button type="button" class="pg-run hidden px-2 py-1 text-xs rounded bg-blue-600 border border-blue-600 text-white hover:bg-blue-700">▶ Run</button>
+    <button type="button" class="pg-reset hidden px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">↺ Reset</button>
+  </div>
+  <div>
+    <div class="bg-slate-100 border-t border-blue-200 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500">Output</div>
+    <iframe src="${demoSrc}" sandbox="allow-scripts" loading="lazy" title="Live demo" class="pg-preview block w-full border-0" style="height:${iframeHeight}px"></iframe>
+  </div>
+</div>`;
+          }
+
           return `<div class="not-prose code-block group relative my-6 rounded-xl border-2 border-blue-200 overflow-hidden shadow-sm">
   <div class="text-sm leading-relaxed">${highlighted}</div>
   <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button>
@@ -311,26 +417,41 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
     <div class="prose prose-slate max-w-none">${content}</div>
   </main>
   ${COPY_SCRIPT}
+  ${slug && PLAYGROUND_TOPICS.has(slug) ? PLAYGROUND_SCRIPT : ''}
 </body>
 </html>`;
 }
 
-function buildIndexPage(css: string): string {
-  const items = topics.map((t) => {
-    const badge = t.live
-      ? `<span class="mt-2 text-xs font-medium text-blue-600 not-italic">Live demos</span>`
-      : `<span class="mt-2 text-xs font-medium text-slate-400 not-italic">Static examples</span>`;
-    return `<li class="list-none p-0 m-0">
+function topicCard(t: Topic): string {
+  const badge = t.live
+    ? `<span class="mt-2 text-xs font-medium text-blue-600 not-italic">Live demos</span>`
+    : `<span class="mt-2 text-xs font-medium text-slate-400 not-italic">Static examples</span>`;
+  return `<li class="list-none p-0 m-0">
       <a href="${t.slug}/index.html" class="flex flex-col p-5 bg-white rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all no-underline text-slate-800 font-semibold">
         ${t.title}
         ${badge}
       </a>
     </li>`;
-  }).join('\n    ');
+}
 
-  const content = `<ul class="not-prose grid grid-cols-2 sm:grid-cols-3 gap-4 list-none p-0 m-0">
-    ${items}
+function topicGrid(list: Topic[]): string {
+  return `<ul class="not-prose grid grid-cols-2 sm:grid-cols-3 gap-4 list-none p-0 m-0">
+    ${list.map(topicCard).join('\n    ')}
   </ul>`;
+}
+
+function buildIndexPage(css: string): string {
+  const beginner = topics.filter((t) => !t.advanced);
+  const advanced = topics.filter((t) => t.advanced);
+
+  const advancedSection = advanced.length
+    ? `<h2 class="not-prose mt-12 mb-1 text-xl font-bold text-slate-800">Advanced</h2>
+    <p class="not-prose mb-4 text-sm text-slate-500">Senior-level deep dives — patterns, pitfalls, and tradeoffs, in fuller prose than the beginner sheets.</p>
+    ${topicGrid(advanced)}`
+    : '';
+
+  const content = `${topicGrid(beginner)}
+    ${advancedSection}`;
 
   return pageHtml(
     'Developer Cheatsheets',

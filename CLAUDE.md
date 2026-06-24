@@ -7,6 +7,15 @@ Live demos for JS-family topics run in sandboxed iframes.
 Audience is **beginners** — prefer full terms ("TypeScript", not "TS") in prose, explain each
 concept in one plain sentence before the code, and keep examples short.
 
+**Exception — the "Advanced" tier:** four pages are deliberate **senior-level** pages — they use
+long explanatory prose and cover tradeoffs, not one-sentence intros: `react-vs-vue`,
+`typescript-patterns`, `vue-patterns`, `nuxt-patterns`. They are the approved deviations from the
+beginner-prose rule; do not "simplify" them back down. These topics carry `advanced: true` in
+`src/index.ts`, which both records the classification and renders them in a separate **"Advanced"**
+section on the homepage. The ~10-line-per-code-block rule (a PDF-rendering constraint) still applies
+to them. Every other topic stays beginner-focused — do not add `advanced: true` without that being
+the explicit intent.
+
 ## Working agreements (read first)
 
 - **Make the change, then verify it.** After editing content run `npm run build:html`; after
@@ -21,7 +30,7 @@ concept in one plain sentence before the code, and keep examples short.
 
 ## Current status
 
-Twelve topics registered; all twelve complete. Phases 1–2 shipped: content linter, CI, watch mode, copy buttons, per-page TOC, meta descriptions, PDF print fix.
+Fifteen topics registered; all fifteen complete. Phases 1–2 shipped: content linter, CI, watch mode, copy buttons, per-page TOC, meta descriptions, PDF print fix.
 
 **JavaScript is topic #1 in the manifest** — it is the foundation for TypeScript, React, Vue, Next.js, and Nuxt. Always list and build JavaScript before TypeScript.
 
@@ -37,9 +46,12 @@ Twelve topics registered; all twelve complete. Phases 1–2 shipped: content lin
 | `src/rails/index.md` | Complete, static code + `# =>` output |
 | `src/elixir/index.md` | Complete, static code + `# =>` output |
 | `src/python/index.md` | Complete, static code + `# =>` output |
-| `src/typescript-patterns/index.md` | Complete, static — generics, utility types, keyof/typeof, overloads, never/exhaustiveness, branded types, security |
-| `src/vue-patterns/index.md` | Complete, static — script setup, Pinia, composables, slots, lifecycle, reactivity perf, watcher cleanup, security |
-| `src/nuxt-patterns/index.md` | Complete, static — useFetch, routeRules/hybrid rendering, Nitro caching, SSR auth, security headers, server-side auth |
+| `src/typescript-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — generics, utility types, keyof/typeof, overloads, never/exhaustiveness, branded types, security + distributive conditionals, assertion functions, interface-vs-type, variance/`in`/`out`, `const` type params, variadic tuples, compiler strictness, type-checker perf |
+| `src/react-patterns/index.md` | Complete, **live demos** (in `JSX_TOPICS`), **Advanced** (`advanced: true`) — React 19: custom hooks, useReducer, context re-render trap, memoization/React Compiler, refs, useId, useTransition/useDeferredValue, useSyncExternalStore, error boundaries, Suspense, key-reset, controlled/uncontrolled, `use()`, form actions, no-effect, StrictMode, security (dangerouslySetInnerHTML, URL injection, SSR state) |
+| `src/nextjs-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — Next 16 App Router: server/client components, server data fetch, Cache Components/`use cache`, route handlers, server actions, async request APIs, `proxy.ts`, segment config, generateStaticParams, streaming, metadata, image/font, navigation, parallel/intercepting routes, security (env, action auth) |
+| `src/vue-patterns/index.md` | Complete, **live demos + editable playground prototype** (in `VUE_TOPICS` + `PLAYGROUND_TOPICS`), **Advanced** (`advanced: true`) — script setup, Pinia, composables, slots, lifecycle, reactivity perf, watcher cleanup, security + reactive props destructure (3.5), composable design/`toValue`, flush timing/`nextTick`, Suspense, `defineExpose`/`useTemplateRef`, reactivity steering, `effectScope` |
+| `src/nuxt-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — useFetch, routeRules/hybrid rendering, Nitro caching, SSR auth, security headers, server-side auth + Nuxt 4 structure, SSR data-fetch model, server `$fetch` short-circuit, `callOnce`, client/server boundaries, Nitro cache storage/SWR, server middleware/plugins, route validation |
+| `src/react-vs-vue/index.md` | Complete, static, **Advanced** (`advanced: true`) — senior-level deep dive: reactivity model, ref/reactive/computed/watch/watchEffect vs useState/useEffect/useRef/useMemo, computed vs useMemo cache guarantee, composables vs hooks, immutable vs mutable, React 19 ref-as-prop, decision framework |
 | `scripts/validate.ts` | Content linter — untagged fences, H1, demo/live, SHIKI_LANGS |
 | `scripts/build.ts` | Markdown → HTML (shiki, esbuild, demo iframes) |
 | `scripts/pdf.ts` | HTML → PDF (headless Chrome) — **optional local tool**, not run in CI |
@@ -135,16 +147,37 @@ it with esbuild and writes a standalone `dist/<topic>/demos/demo-N.html`, embedd
 | Topic kind | Set in build.ts | esbuild loader | Mount | Runtime (pinned CDN) |
 |------------|-----------------|----------------|-------|----------------------|
 | TypeScript / plain JS | (neither set) | `ts` | captures `console.log` into `#out` | none |
-| React | `JSX_TOPICS` | `tsx` + `jsx:automatic` | `#root` | react/react-dom 18.3.1 via esm.sh |
-| Vue | `VUE_TOPICS` | `ts` | `#app` | vue 3.5.13 esm-browser via jsDelivr |
+| React | `JSX_TOPICS` | `tsx` + `jsx:automatic` | `#root` | react/react-dom 19.2.0 via esm.sh |
+| Vue | `VUE_TOPICS` | `ts` | `#app` | vue 3.5.35 esm-browser via jsDelivr |
 
 - **Vue is not JSX** — it uses runtime template strings, so the import map points at the *full* build
   (`vue.esm-browser.js`, includes the template compiler). Don't move Vue into `JSX_TOPICS`.
 - **CDN versions are pinned on purpose.** Bump them deliberately, never "to latest" as a side effect.
+  Current pins match framework peer deps: React 19.2.0 (Next.js 16 peer dep), Vue 3.5.35 (Nuxt 4 peer dep).
 - A TS/JS demo should `console.log` its results (that's what shows). A framework demo must
   `createRoot(...).render(...)` (React) or `createApp(...).mount("#app")` (Vue).
 - **Rails / Elixir never execute.** Show static code with an expected-output annotation (trailing
   `# => 42` or an `# Output:` comment). Do not add demos or attempt server-side/WASM execution.
+
+### Editable playground (Tier-1 prototype — `vue-patterns` only)
+
+Topics in `PLAYGROUND_TOPICS` (currently just `vue-patterns`) render each ` ```demo ` fence as the
+normal pre-rendered iframe **plus** an "✎ Edit code" affordance. On Edit the static highlighted code
+is swapped for an editable `<textarea>` seeded with the source; "▶ Run" transpiles it **in the
+browser** with **Sucrase** (`https://esm.sh/sucrase@3.35.0`, lazy-loaded on first Run, TypeScript
+strip only — no JSX) and re-renders by setting the preview iframe's `srcdoc`; "↺ Reset" restores the
+original source and demo. Logic lives in `PLAYGROUND_SCRIPT` in `build.ts`, injected by `pageHtml`
+**only** for playground topics. Notes and constraints:
+
+- The preview iframe stays `sandbox="allow-scripts"` (no `allow-same-origin`); Sucrase runs in the
+  trusted parent page, only compiled JS crosses into the sandbox.
+- Vue-only: `PLAYGROUND_SCRIPT` hardcodes the **Vue import map** — keep its version in sync with
+  `VUE_IMPORT_MAP`. Generalizing to React needs a JSX transform (`transforms: ['typescript','jsx']`)
+  and the React import map (a Tier-2 task).
+- The editor is a plain textarea (no syntax highlighting) — that's the Tier-1 tradeoff. Print is
+  preserved: the static highlighted code shows, editor/toolbar are `no-print`, iframe hidden.
+- Editing only works for runtime-template Vue (what the demos already use); `<script setup>` SFC
+  syntax won't compile in-browser without `@vue/compiler-sfc`.
 
 ## PDF / print
 
