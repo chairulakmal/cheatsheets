@@ -497,6 +497,7 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <title>${title}</title>
   <meta name="description" content="${description}">
   ${pageUrl ? `<link rel="canonical" href="${pageUrl}">` : ''}
@@ -607,6 +608,9 @@ async function main() {
 
   writeFileSync(join(root, 'dist', 'index.html'), buildIndexPage(css), 'utf-8');
   console.log('Built: dist/index.html');
+
+  copyFileSync(join(root, 'assets', 'favicon.svg'), join(root, 'dist', 'favicon.svg'));
+  console.log('Copied: dist/favicon.svg');
 
   // Emit a CNAME so GitHub Pages keeps the custom domain on every deploy.
   // Derived from SITE_URL, so the hostname lives in one place (the workflows).
