@@ -26,9 +26,10 @@ previous one is done.
   instead of loading from esm.sh/jsDelivr. Tradeoff: the demos load local ES modules from a
   null-origin iframe, which needs http CORS — so local viewing is now via **`npm run serve`**, not
   `file://`. Sucrase remains the one CDN runtime dep. GitHub Pages serves the CORS header in prod.
-- **Topic count is now 15**, which crosses the Phase 5 unlock threshold (≥ 15). Note the project's
-  Foundation-first ordering: Phase 4a/4b coverage topics (HTML, CSS, Git, SQL, Bash) are still
-  unstarted, so the Advanced tier grew the count ahead of that planned beginner coverage.
+- **Topic count is now 19**, well past the Phase 5 unlock threshold (≥ 15). Phase 4a (HTML, CSS,
+  Git) and the first half of Phase 4b (Bash) have shipped; SQL is the remaining 4b item. The
+  Advanced tier originally grew the count ahead of that planned beginner coverage, which has since
+  caught up.
 
 ---
 
@@ -126,9 +127,11 @@ Ship Phase 4a before starting 4b.
 
 ## Phase 4b — Broaden coverage: mid-tier (time-boxed 2 weeks)
 
-- [ ] **SQL** cheatsheet — decide: in-browser via `sql.js`/PGlite (adds ~700 KB, enables live
-  demos) vs. static output annotations. Choose based on bundle size tolerance at that point.
-- [ ] **Bash/shell** cheatsheet — static code + expected output, `live: false`.
+- [ ] **SQL** cheatsheet — use **PGlite** (~3 MB, true PostgreSQL in WASM) for live in-browser
+  demos; more technically impressive than static annotations and demonstrates WebAssembly
+  integration. `live: true`, wire a new `SQL_TOPICS` set in `build.ts`.
+- [x] **Bash/shell** cheatsheet — static `bash` + `# =>`/comment output, `live: false`; follows the
+  Git sheet pattern, no new build infra. In the *Fundamentals* homepage group.
 
 **Exit criteria:** both topics pass validate and CI. If either is not done within the 2-week
 time-box, ship what's ready and explicitly defer the rest.
@@ -137,12 +140,21 @@ time-box, ship what's ready and explicitly defer the rest.
 
 ## Phase 5 — Discovery & polish (unlock when topic count ≥ 15)
 
-Goal: the collection stays navigable as it grows.
+Goal: the collection stays navigable as it grows. **Priority order within Phase 5:**
+1. Topic grouping + dark mode (one session, high visual impact)
+2. Pagefind search (makes the site a usable daily tool, not just a showcase)
+3. Vue prominence on the homepage (see Someday/maybe)
 
+- [x] **Topic grouping / tags** on the landing page — grouped by *Fundamentals* (JS, TS, HTML,
+  CSS, Git), *Frameworks* (React, Next.js, Vue, Nuxt), *Backend* (Rails, Elixir, Python), and
+  *Advanced*. `group` field added to `Topic` in `src/index.ts`; `topicSection()` helper in
+  `build.ts` renders each group.
+- [x] **Dark mode** toggle — Tailwind `darkMode: 'class'` strategy; `dark:` variants on all
+  template HTML in `build.ts`; Shiki dual-theme (`github-light`/`github-dark`) with CSS variable
+  switch in `input.css`; FOUC-prevention inline `<script>` in `<head>`; toggle button in header
+  persists to `localStorage`.
 - [ ] **Client-side search** using [Pagefind](https://pagefind.app) — post-build step, ~25 KB JS
-  bundle, no backend required.
-- [ ] **Topic grouping / tags** on the landing page (languages vs. frameworks vs. tools).
-- [ ] **Dark mode** toggle.
+  bundle, no backend required. Do after topic grouping so the UI has a logical home.
 - [ ] **Full accessibility audit** — keyboard navigation, contrast ratios, screen-reader labels
   across all topics.
 - [x] **Editable demo playground — Tier 2 shipped.** CodeMirror 6 editor with TypeScript/JSX syntax
@@ -208,6 +220,13 @@ note, and `npm run validate` still passes.
 
 Ideas worth noting but not committed. Revisit only if there is clear user demand.
 
+- [x] **Vue prominence on homepage** — done. Vue + Nuxt now lead the *Frameworks* group and Vue
+  Patterns + Nuxt Patterns lead the *Advanced* group (ordering driven by `src/index.ts`). Vue is the
+  dominant framework in Japanese companies; meaningful signal for the Tokyo job market.
+- [ ] **Japanese UI toggle** — a `lang` toggle that switches navigation labels, homepage headings,
+  and section chrome (not technical content) between English and Japanese. Higher effort but the
+  biggest market-specific differentiator for a Tokyo job search. Even partial (homepage only) is
+  meaningful.
 - [ ] Phase 4c — stretch topics: Go, Rust, Docker. Gated on Phase 4a shipping cleanly and a demand
   signal (issues, traffic, stars).
 - [ ] "Try it" full-screen sandbox — expand an iframe to full viewport (the infrastructure is

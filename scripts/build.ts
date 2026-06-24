@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { Marked } from 'marked';
 import { createHighlighter, type Highlighter } from 'shiki';
 import * as esbuild from 'esbuild';
-import { topics, type Topic } from '../src/index.ts';
+import { topics, type Topic, type TopicGroup } from '../src/index.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -98,10 +98,10 @@ function escapeHtml(raw: string): string {
 
 function buildToc(sections: string[]): string {
   const items = sections
-    .map((s) => `<li><a href="#${slugify(s)}" class="text-blue-600 hover:underline text-sm">${tocLabel(s)}</a></li>`)
+    .map((s) => `<li><a href="#${slugify(s)}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">${tocLabel(s)}</a></li>`)
     .join('\n      ');
-  return `<nav aria-label="Table of contents" class="not-prose my-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-  <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Contents</p>
+  return `<nav aria-label="Table of contents" class="not-prose my-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+  <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Contents</p>
   <ol class="list-decimal list-inside space-y-1 pl-0">
     ${items}
   </ol>
@@ -451,52 +451,54 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
           const demoSrc = buildDemoFile(topic.slug, text, demoIndex++);
           const highlighted = highlighter.codeToHtml(text, {
             lang: isHtml ? 'html' : isJsx ? 'tsx' : 'typescript',
-            theme: 'github-light',
+            themes: { light: 'github-light', dark: 'github-dark' },
+            defaultColor: false,
           });
           const iframeHeight = isHtml ? 150 : isJsx || isVue ? 160 : 110;
 
           // Editable playground (prototype topics): static highlighted code +
           // an editable textarea revealed by "Edit", transpiled + re-rendered on "Run".
           if (PLAYGROUND_TOPICS.has(topic.slug)) {
-            return `<div class="not-prose code-block group relative my-6 rounded-xl border-2 border-blue-200 overflow-hidden shadow-sm playground">
+            return `<div class="not-prose code-block group relative my-6 rounded-xl border-2 border-blue-200 dark:border-blue-900 overflow-hidden shadow-sm playground">
   <div class="text-sm leading-relaxed pg-display">${highlighted}</div>
   <div class="pg-editor hidden" role="textbox" aria-label="Editable demo source" aria-multiline="true"></div>
   <textarea class="pg-src-data" hidden aria-hidden="true">${escapeHtml(text)}</textarea>
-  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700 no-print" aria-label="Copy code">Copy</button>
-  <div class="pg-toolbar no-print flex gap-2 bg-slate-100 border-t border-blue-200 px-3 py-2">
-    <button type="button" class="pg-edit px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">✎ Edit code</button>
+  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 no-print" aria-label="Copy code">Copy</button>
+  <div class="pg-toolbar no-print flex gap-2 bg-slate-100 dark:bg-slate-800 border-t border-blue-200 dark:border-blue-900 px-3 py-2">
+    <button type="button" class="pg-edit px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600">✎ Edit code</button>
     <button type="button" class="pg-run hidden px-2 py-1 text-xs rounded bg-blue-600 border border-blue-600 text-white hover:bg-blue-700">▶ Run</button>
-    <button type="button" class="pg-reset hidden px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">↺ Reset</button>
+    <button type="button" class="pg-reset hidden px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600">↺ Reset</button>
   </div>
   <div>
-    <div class="bg-slate-100 border-t border-blue-200 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500">Output</div>
+    <div class="bg-slate-100 dark:bg-slate-800 border-t border-blue-200 dark:border-blue-900 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Output</div>
     <iframe src="${demoSrc}" sandbox="allow-scripts" loading="lazy" title="Live demo" class="pg-preview block w-full border-0" style="height:${iframeHeight}px"></iframe>
   </div>
 </div>`;
           }
 
-          return `<div class="not-prose code-block group relative my-6 rounded-xl border-2 border-blue-200 overflow-hidden shadow-sm">
+          return `<div class="not-prose code-block group relative my-6 rounded-xl border-2 border-blue-200 dark:border-blue-900 overflow-hidden shadow-sm">
   <div class="text-sm leading-relaxed">${highlighted}</div>
-  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button>
+  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" aria-label="Copy code">Copy</button>
   <div>
-    <div class="bg-slate-100 border-t border-blue-200 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500">Output</div>
+    <div class="bg-slate-100 dark:bg-slate-800 border-t border-blue-200 dark:border-blue-900 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Output</div>
     <iframe src="${demoSrc}" sandbox="allow-scripts" loading="lazy" title="Live demo" class="block w-full border-0" style="height:${iframeHeight}px"></iframe>
   </div>
 </div>`;
         }
 
         if (!language || language === 'text') {
-          return `<div class="not-prose code-block group relative my-4"><pre class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre><button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button></div>`;
+          return `<div class="not-prose code-block group relative my-4"><pre class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre><button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" aria-label="Copy code">Copy</button></div>`;
         }
 
         try {
           const highlighted = highlighter.codeToHtml(text, {
             lang: language,
-            theme: 'github-light',
+            themes: { light: 'github-light', dark: 'github-dark' },
+            defaultColor: false,
           });
-          return `<div class="not-prose code-block group relative my-4 rounded-lg border border-slate-200 overflow-hidden text-sm leading-relaxed shadow-sm">${highlighted}<button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button></div>`;
+          return `<div class="not-prose code-block group relative my-4 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-sm leading-relaxed shadow-sm">${highlighted}<button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" aria-label="Copy code">Copy</button></div>`;
         } catch {
-          return `<div class="not-prose code-block group relative my-4"><pre class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre><button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button></div>`;
+          return `<div class="not-prose code-block group relative my-4"><pre class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre><button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" aria-label="Copy code">Copy</button></div>`;
         }
       },
     },
@@ -524,8 +526,8 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
 
   const metaLine = slug
     ? `<div class="flex items-center gap-4 mt-2">
-        ${lastUpdated ? `<span class="text-xs text-slate-500">Updated ${lastUpdated}</span>` : ''}
-        <button type="button" onclick="window.print()" class="no-print text-xs text-blue-600 hover:underline">↓ Save as PDF</button>
+        ${lastUpdated ? `<span class="text-xs text-slate-500 dark:text-slate-400">Updated ${lastUpdated}</span>` : ''}
+        <button type="button" onclick="window.print()" class="no-print text-xs text-blue-600 dark:text-blue-400 hover:underline">↓ Save as PDF</button>
       </div>`
     : '';
 
@@ -540,35 +542,40 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
   ${pageUrl ? `<link rel="canonical" href="${pageUrl}">` : ''}
   ${ogTags}
   <style>${css}</style>
+  <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(!s&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');})()</script>
 </head>
-<body class="bg-slate-50 min-h-screen">
-  <header class="bg-white border-b border-slate-200">
+<body class="bg-slate-50 dark:bg-slate-900 min-h-screen">
+  <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
     <div class="max-w-3xl mx-auto px-6 py-8">
-      ${nav}
-      <h1 class="text-3xl font-bold text-slate-900 mt-1">${title}</h1>
+      <div class="flex items-start justify-between">
+        <div>${nav}</div>
+        <button id="theme-toggle" type="button" class="no-print text-xs px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors" aria-label="Toggle dark mode">Dark</button>
+      </div>
+      <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1">${title}</h1>
       ${metaLine}
     </div>
   </header>
   <main class="max-w-3xl mx-auto px-6 py-10">
-    <div class="prose prose-slate max-w-none">${content}</div>
+    <div class="prose prose-slate dark:prose-invert max-w-none">${content}</div>
   </main>
-  <footer class="border-t border-slate-200 mt-4">
-    <div class="max-w-3xl mx-auto px-6 py-6 text-sm text-slate-500">
-      <a href="https://github.com/chairulakmal/cheatsheets" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">View source on GitHub</a>
+  <footer class="border-t border-slate-200 dark:border-slate-700 mt-4">
+    <div class="max-w-3xl mx-auto px-6 py-6 text-sm text-slate-500 dark:text-slate-400">
+      <a href="https://github.com/chairulakmal/cheatsheets" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">View source on GitHub</a>
     </div>
   </footer>
   ${COPY_SCRIPT}
   ${slug && PLAYGROUND_TOPICS.has(slug) ? `<script>var PLAYGROUND_TOPIC = ${JSON.stringify(slug)};</script>${PLAYGROUND_SCRIPT}` : ''}
+  <script>(function(){var h=document.documentElement,btn=document.getElementById('theme-toggle');function apply(dark){h.classList.toggle('dark',dark);if(btn)btn.textContent=dark?'Light':'Dark';}apply(h.classList.contains('dark'));if(btn)btn.addEventListener('click',function(){var dark=!h.classList.contains('dark');apply(dark);localStorage.setItem('theme',dark?'dark':'light');});})()</script>
 </body>
 </html>`;
 }
 
 function topicCard(t: Topic): string {
   const badge = t.live
-    ? `<span class="mt-2 text-xs font-medium text-blue-600 not-italic">Live demos</span>`
-    : `<span class="mt-2 text-xs font-medium text-slate-400 not-italic">Static examples</span>`;
+    ? `<span class="mt-2 text-xs font-medium text-blue-600 dark:text-blue-400 not-italic">Live demos</span>`
+    : `<span class="mt-2 text-xs font-medium text-slate-400 dark:text-slate-500 not-italic">Static examples</span>`;
   return `<li class="list-none p-0 m-0">
-      <a href="${t.slug}/index.html" class="flex flex-col p-5 bg-white rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all no-underline text-slate-800 font-semibold">
+      <a href="${t.slug}/index.html" class="flex flex-col p-5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all no-underline text-slate-800 dark:text-slate-200 font-semibold">
         ${t.title}
         ${badge}
       </a>
@@ -581,18 +588,23 @@ function topicGrid(list: Topic[]): string {
   </ul>`;
 }
 
+function topicSection(label: string, desc: string, list: Topic[]): string {
+  if (!list.length) return '';
+  return `<h2 class="not-prose mt-10 mb-1 text-xl font-bold text-slate-800 dark:text-slate-200">${label}</h2>
+  <p class="not-prose mb-4 text-sm text-slate-500 dark:text-slate-400">${desc}</p>
+  ${topicGrid(list)}`;
+}
+
 function buildIndexPage(css: string): string {
-  const beginner = topics.filter((t) => !t.advanced);
+  const byGroup = (g: TopicGroup) => topics.filter((t) => !t.advanced && t.group === g);
   const advanced = topics.filter((t) => t.advanced);
 
-  const advancedSection = advanced.length
-    ? `<h2 class="not-prose mt-12 mb-1 text-xl font-bold text-slate-800">Advanced</h2>
-    <p class="not-prose mb-4 text-sm text-slate-500">Senior-level deep dives — patterns, pitfalls, and tradeoffs, in fuller prose than the beginner sheets.</p>
-    ${topicGrid(advanced)}`
-    : '';
-
-  const content = `${topicGrid(beginner)}
-    ${advancedSection}`;
+  const content = [
+    topicSection('Fundamentals', 'Core languages and tools every developer needs.', byGroup('fundamentals')),
+    topicSection('Frameworks', 'Front-end and full-stack web frameworks.', byGroup('frameworks')),
+    topicSection('Backend', 'Server-side languages and frameworks.', byGroup('backend')),
+    topicSection('Advanced', 'Senior-level deep dives — patterns, pitfalls, and tradeoffs, in fuller prose than the beginner sheets.', advanced),
+  ].join('\n  ');
 
   return pageHtml(
     'Developer Cheatsheets',
@@ -606,7 +618,7 @@ function buildIndexPage(css: string): string {
 
 async function main() {
   const highlighter = await createHighlighter({
-    themes: ['github-light'],
+    themes: ['github-light', 'github-dark'],
     langs: [...SHIKI_LANGS],
   });
 
@@ -631,7 +643,7 @@ async function main() {
     const titleMatch = md.match(/^# (.+)$/m);
     const title = titleMatch ? titleMatch[1] : topic.title;
     const mdBody = md.replace(/^# .+\n?/, '');
-    const nav = `<nav aria-label="Breadcrumb" class="mb-3"><a href="../index.html" class="text-sm text-blue-600 hover:underline">← All Cheatsheets</a></nav>`;
+    const nav = `<nav aria-label="Breadcrumb" class="mb-3"><a href="../index.html" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">← All Cheatsheets</a></nav>`;
 
     const sections = extractSections(mdBody);
     const toc = sections.length >= 5 ? buildToc(sections) : '';

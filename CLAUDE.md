@@ -30,7 +30,7 @@ add `advanced: true` without that being the explicit intent.
 
 ## Current status
 
-Eighteen topics registered; all eighteen complete. Phases 1–2 shipped: content linter, CI, watch mode, copy buttons, per-page TOC, meta descriptions, PDF print fix. Phase 4a beginner coverage started: HTML, CSS, Git.
+Nineteen topics registered; all nineteen complete. Phases 1–2 shipped: content linter, CI, watch mode, copy buttons, per-page TOC, meta descriptions, PDF print fix. Phase 4a beginner coverage shipped: HTML, CSS, Git. Phase 4b started: Bash. Phase 5 polish landed: homepage topic grouping (Fundamentals/Frameworks/Backend/Advanced, Vue-first), dark mode (Tailwind `darkMode: 'class'` + Shiki dual-theme).
 
 **JavaScript is topic #1 in the manifest** — it is the foundation for TypeScript, React, Vue, Next.js, and Nuxt. Always list and build JavaScript before TypeScript.
 
@@ -49,6 +49,7 @@ Eighteen topics registered; all eighteen complete. Phases 1–2 shipped: content
 | `src/html/index.md` | Complete, **live demos** (in `HTML_TOPICS`) — raw-HTML rendered visually in the iframe |
 | `src/css/index.md` | Complete, **live demos** (in `HTML_TOPICS`) — selectors, box model, **Flexbox** (4 sections), grid, position, variables, media queries |
 | `src/git/index.md` | Complete, static code + `# =>`/comment output — setup, workflow, branches, merge, remotes, undo, stash, gitignore, tags |
+| `src/bash/index.md` | Complete, static `bash` + `# =>`/comment output, `live: false` — navigation, files, viewing, find/grep, pipes/redirection, variables, command substitution, conditionals, loops, functions, scripts, permissions, env/PATH, chaining |
 | `src/typescript-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — generics, utility types, keyof/typeof, overloads, never/exhaustiveness, branded types, security + distributive conditionals, assertion functions, interface-vs-type, variance/`in`/`out`, `const` type params, variadic tuples, compiler strictness, type-checker perf |
 | `src/react-patterns/index.md` | Complete, **live demos + editable playground** (in `JSX_TOPICS` + `PLAYGROUND_TOPICS`), **Advanced** (`advanced: true`) — React 19: custom hooks, useReducer, context re-render trap, memoization/React Compiler, refs, useId, useTransition/useDeferredValue, useSyncExternalStore, error boundaries, Suspense, key-reset, controlled/uncontrolled, `use()`, form actions, no-effect, StrictMode, security (dangerouslySetInnerHTML, URL injection, SSR state) |
 | `src/nextjs-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — Next 16 App Router: server/client components, server data fetch, Cache Components/`use cache`, route handlers, server actions, async request APIs, `proxy.ts`, segment config, generateStaticParams, streaming, metadata, image/font, navigation, parallel/intercepting routes, security (env, action auth) |

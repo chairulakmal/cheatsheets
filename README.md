@@ -28,6 +28,7 @@ Plain-English, one-concept-at-a-time references — the main collection.
 | HTML | Yes — rendered visually in the page |
 | CSS | Yes — rendered visually in the page |
 | Git | No — terminal output shown as comments |
+| Bash | No — terminal output shown as comments |
 
 ### Advanced (senior-level)
 

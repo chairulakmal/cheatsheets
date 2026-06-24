@@ -1,3 +1,5 @@
+export type TopicGroup = 'fundamentals' | 'frameworks' | 'backend';
+
 export interface Topic {
   slug: string;
   title: string;
@@ -9,25 +11,28 @@ export interface Topic {
    * "Advanced" section on the homepage. Default (omitted) = beginner-focused.
    */
   advanced?: boolean;
+  /** Homepage grouping for non-advanced topics. */
+  group?: TopicGroup;
 }
 
 export const topics: Topic[] = [
-  { slug: "javascript", title: "JavaScript", live: true },
-  { slug: "typescript", title: "TypeScript", live: true },
-  { slug: "react", title: "React", live: true },
-  { slug: "nextjs", title: "Next.js", live: true },
-  { slug: "vue", title: "Vue", live: true },
-  { slug: "nuxt", title: "Nuxt", live: true },
-  { slug: "rails", title: "Rails", live: false },
-  { slug: "elixir", title: "Elixir", live: false },
-  { slug: "python", title: "Python", live: false },
-  { slug: "html", title: "HTML", live: true },
-  { slug: "css", title: "CSS", live: true },
-  { slug: "git", title: "Git", live: false },
-  { slug: "typescript-patterns", title: "TypeScript Patterns", live: false, advanced: true },
-  { slug: "react-patterns", title: "React Patterns", live: true, advanced: true },
-  { slug: "nextjs-patterns", title: "Next.js Patterns", live: false, advanced: true },
-  { slug: "react-vs-vue", title: "React vs Vue", live: false, advanced: true },
+  { slug: "javascript", title: "JavaScript", live: true, group: "fundamentals" },
+  { slug: "typescript", title: "TypeScript", live: true, group: "fundamentals" },
+  { slug: "html", title: "HTML", live: true, group: "fundamentals" },
+  { slug: "css", title: "CSS", live: true, group: "fundamentals" },
+  { slug: "git", title: "Git", live: false, group: "fundamentals" },
+  { slug: "bash", title: "Bash", live: false, group: "fundamentals" },
+  { slug: "vue", title: "Vue", live: true, group: "frameworks" },
+  { slug: "nuxt", title: "Nuxt", live: true, group: "frameworks" },
+  { slug: "react", title: "React", live: true, group: "frameworks" },
+  { slug: "nextjs", title: "Next.js", live: true, group: "frameworks" },
+  { slug: "rails", title: "Rails", live: false, group: "backend" },
+  { slug: "elixir", title: "Elixir", live: false, group: "backend" },
+  { slug: "python", title: "Python", live: false, group: "backend" },
   { slug: "vue-patterns", title: "Vue Patterns", live: true, advanced: true },
   { slug: "nuxt-patterns", title: "Nuxt Patterns", live: false, advanced: true },
+  { slug: "react-vs-vue", title: "React vs Vue", live: false, advanced: true },
+  { slug: "react-patterns", title: "React Patterns", live: true, advanced: true },
+  { slug: "nextjs-patterns", title: "Next.js Patterns", live: false, advanced: true },
+  { slug: "typescript-patterns", title: "TypeScript Patterns", live: false, advanced: true },
 ];
