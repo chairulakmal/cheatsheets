@@ -13,6 +13,16 @@
   opacity: 1;
 }
 
+/* CodeMirror editor mount — constrains height and matches the page font stack. */
+.pg-editor .cm-editor {
+  font-size: 12.5px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  max-height: 420px;
+}
+.pg-editor .cm-scroller {
+  overflow: auto;
+}
+
 /* Print / "Save as PDF": hide interactive chrome and compact the layout so the
    browser's print-to-PDF (and the optional local pdf.ts) produce a clean, dense
    cheatsheet. Demos' iframes are hidden — the static code above them stays. */

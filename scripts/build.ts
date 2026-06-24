@@ -18,10 +18,10 @@ const SHIKI_LANGS = [
 const JSX_TOPICS = new Set(['react', 'nextjs', 'react-patterns']);
 const VUE_TOPICS = new Set(['vue', 'nuxt', 'vue-patterns']);
 
-// Tier-1 editable playground (prototype). Topics here render demos as an editable
-// source + "Run" that transpiles in-browser (Sucrase, lazy-loaded) and re-renders.
-// Currently Vue-only — the playground script injects the Vue import map.
-const PLAYGROUND_TOPICS = new Set(['vue-patterns']);
+// Tier-2 editable playground (CodeMirror). Topics here render demos with a full
+// syntax-highlighted editor (CodeMirror 6, lazy-loaded) instead of a plain textarea.
+// Sucrase handles in-browser transpilation. Vue uses ['typescript']; React adds 'jsx'.
+const PLAYGROUND_TOPICS = new Set(['vue-patterns', 'react-patterns']);
 
 // Set SITE_URL env var at build time to enable absolute OG URLs and canonical links.
 const SITE_URL = (process.env.SITE_URL ?? '').replace(/\/$/, '');
@@ -203,8 +203,11 @@ ${js}
 
 const COPY_SCRIPT = `<script>
 document.querySelectorAll('.copy-btn').forEach(function(btn) {
+  var block = btn.closest('.code-block');
+  // Playground blocks wire their own copy handler in PLAYGROUND_SCRIPT.
+  if (block && block.classList.contains('playground')) return;
   btn.addEventListener('click', function() {
-    var pre = btn.closest('.code-block').querySelector('pre');
+    var pre = block ? block.querySelector('pre') : null;
     navigator.clipboard.writeText(pre ? pre.textContent : '').then(function() {
       btn.textContent = 'Copied!';
       setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
@@ -213,60 +216,119 @@ document.querySelectorAll('.copy-btn').forEach(function(btn) {
 });
 </script>`;
 
-// Tier-1 editable playground. Reveals an editable copy of the demo source, then on
-// "Run" transpiles it in the browser with Sucrase (lazy-loaded, TypeScript strip only)
-// and re-renders by swapping the preview iframe's srcdoc. Vue-only for now: the preview
-// document embeds the Vue import map (keep the version in sync with VUE_IMPORT_MAP).
+// Tier-2 editable playground. Renders a CodeMirror 6 editor (lazy-loaded from CDN)
+// with TypeScript/JSX syntax highlighting. Sucrase handles in-browser transpilation.
+// PLAYGROUND_TOPIC is injected as a separate <script> tag just before this constant
+// (see pageHtml) — it selects the import map and Sucrase transforms per topic.
+// CDN versions are pinned deliberately; keep in sync with REACT_IMPORT_MAP / VUE_IMPORT_MAP.
 const PLAYGROUND_SCRIPT = `<script>
 (function () {
-  var IMPORT_MAP = '<script type="importmap">{ "imports": { "vue": "https://cdn.jsdelivr.net/npm/vue@3.5.35/dist/vue.esm-browser.js" } }<\\/script>';
+  var VUE_MAP = '<script type="importmap">{"imports":{"vue":"https://cdn.jsdelivr.net/npm/vue@3.5.35/dist/vue.esm-browser.js"}}<\\/script>';
+  var REACT_MAP = '<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.2.0","react-dom/client":"https://esm.sh/react-dom@19.2.0/client","react/jsx-runtime":"https://esm.sh/react@19.2.0/jsx-runtime"}}<\\/script>';
   var STYLE = '<style>body{font-family:system-ui,sans-serif;font-size:13px;margin:0;padding:12px 16px;background:#fff;color:#1e293b}.err{color:#dc2626;font-family:monospace;font-size:12px;white-space:pre-wrap}</style>';
 
+  function isReact() { return typeof PLAYGROUND_TOPIC !== 'undefined' && PLAYGROUND_TOPIC === 'react-patterns'; }
+
   function previewDoc(code) {
-    return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' + IMPORT_MAP + STYLE +
-      '</head><body><div id="app"></div>' +
-      '<script>window.onerror=function(m){var a=document.getElementById("app");if(a){a.innerHTML="<span class=err>Error: "+m+"</span>";}return true;};<\\/script>' +
+    var react = isReact();
+    var importMap = react ? REACT_MAP : VUE_MAP;
+    var mountEl = react ? '<div id="root"></div>' : '<div id="app"></div>';
+    var errId = react ? '"root"' : '"app"';
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' + importMap + STYLE +
+      '</head><body>' + mountEl +
+      '<script>window.onerror=function(m){var a=document.getElementById(' + errId + ');if(a)a.innerHTML="<span class=err>Error: "+m+"</span>";return true;};<\\/script>' +
       '<script type="module">' + code + '<\\/script></body></html>';
   }
+
   function errorDoc(msg) {
     return '<!DOCTYPE html><html><head><meta charset="UTF-8">' + STYLE + '</head><body><pre class="err">' + msg + '</pre></body></html>';
   }
 
-  var sucrase;
+  var sucraseP;
   function loadSucrase() {
-    if (!sucrase) {
-      sucrase = import('https://esm.sh/sucrase@3.35.0').then(function (m) {
-        return m.transform || (m.default && m.default.transform);
-      });
-    }
-    return sucrase;
+    if (!sucraseP) sucraseP = import('https://esm.sh/sucrase@3.35.0').then(function (m) { return m.transform || (m.default && m.default.transform); });
+    return sucraseP;
+  }
+
+  // CodeMirror 6 — pinned; update deliberately. @6.0.1 is the codemirror meta-package;
+  // ?bundle makes each import self-contained so shared deps don't conflict across imports.
+  var cmP;
+  function loadCM() {
+    if (!cmP) cmP = Promise.all([
+      import('https://esm.sh/codemirror@6.0.1?bundle'),
+      import('https://esm.sh/@codemirror/lang-javascript@6.2.2?bundle'),
+    ]).then(function (mods) { return { cm: mods[0], javascript: mods[1].javascript }; });
+    return cmP;
   }
 
   document.querySelectorAll('.playground').forEach(function (pg) {
-    var display = pg.querySelector('.pg-display');
-    var src = pg.querySelector('.pg-src');
-    var preview = pg.querySelector('.pg-preview');
-    var editBtn = pg.querySelector('.pg-edit');
-    var runBtn = pg.querySelector('.pg-run');
+    var display  = pg.querySelector('.pg-display');
+    var editorEl = pg.querySelector('.pg-editor');
+    var srcData  = pg.querySelector('.pg-src-data');
+    var preview  = pg.querySelector('.pg-preview');
+    var editBtn  = pg.querySelector('.pg-edit');
+    var runBtn   = pg.querySelector('.pg-run');
     var resetBtn = pg.querySelector('.pg-reset');
+    var copyBtn  = pg.querySelector('.copy-btn');
     var originalSrc = preview.getAttribute('src');
+    var editorView  = null;
 
-    function autosize() { src.style.height = 'auto'; src.style.height = (src.scrollHeight + 2) + 'px'; }
+    // Copy: when editor is active use its value; otherwise fall back to highlighted <pre>.
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function () {
+        var text = editorView ? editorView.state.doc.toString() : (pg.querySelector('pre') ? pg.querySelector('pre').textContent : '');
+        navigator.clipboard.writeText(text || '').then(function () {
+          copyBtn.textContent = 'Copied!';
+          setTimeout(function () { copyBtn.textContent = 'Copy'; }, 2000);
+        });
+      });
+    }
 
-    editBtn.addEventListener('click', function () {
+    function showEditor() {
       display.classList.add('hidden');
-      src.classList.remove('hidden');
+      editorEl.classList.remove('hidden');
       runBtn.classList.remove('hidden');
       resetBtn.classList.remove('hidden');
       editBtn.classList.add('hidden');
-      autosize();
-      src.focus();
+    }
+
+    editBtn.addEventListener('click', function () {
+      if (editorView) { showEditor(); return; }
+      editBtn.textContent = '… loading';
+      editBtn.disabled = true;
+      loadCM().then(function (mods) {
+        var cm = mods.cm;
+        var jsLang = mods.javascript({ typescript: true, jsx: isReact() });
+        editorView = new cm.EditorView({
+          state: cm.EditorState.create({
+            doc: srcData.value,
+            extensions: [
+              cm.basicSetup,
+              jsLang,
+              cm.EditorView.theme({
+                '&': { fontSize: '12.5px', fontFamily: 'ui-monospace,Menlo,Consolas,monospace' },
+                '.cm-scroller': { overflow: 'auto', maxHeight: '420px' },
+              }),
+            ],
+          }),
+          parent: editorEl,
+        });
+        editBtn.textContent = '✎ Edit code';
+        editBtn.disabled = false;
+        showEditor();
+      }).catch(function (e) {
+        editBtn.textContent = '✎ Edit code';
+        editBtn.disabled = false;
+        console.error('CodeMirror load failed:', e);
+      });
     });
 
     runBtn.addEventListener('click', function () {
+      var src = editorView ? editorView.state.doc.toString() : srcData.value;
+      var transforms = isReact() ? ['typescript', 'jsx'] : ['typescript'];
       runBtn.textContent = '… compiling';
       loadSucrase().then(function (transform) {
-        var code = transform(src.value, { transforms: ['typescript'] }).code;
+        var code = transform(src, { transforms: transforms }).code;
         preview.removeAttribute('src');
         preview.srcdoc = previewDoc(code);
       }).catch(function (e) {
@@ -276,13 +338,12 @@ const PLAYGROUND_SCRIPT = `<script>
     });
 
     resetBtn.addEventListener('click', function () {
-      src.value = src.defaultValue;
-      autosize();
+      if (editorView) {
+        editorView.dispatch({ changes: { from: 0, to: editorView.state.doc.length, insert: srcData.value } });
+      }
       preview.removeAttribute('srcdoc');
       preview.setAttribute('src', originalSrc);
     });
-
-    src.addEventListener('input', autosize);
   });
 })();
 </script>`;
@@ -326,8 +387,9 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
           if (PLAYGROUND_TOPICS.has(topic.slug)) {
             return `<div class="not-prose code-block group relative my-6 rounded-xl border-2 border-blue-200 overflow-hidden shadow-sm playground">
   <div class="text-sm leading-relaxed pg-display">${highlighted}</div>
-  <textarea class="pg-src hidden no-print block w-full font-mono text-xs leading-relaxed p-4 bg-slate-50 border-0 resize-none focus:outline-none" spellcheck="false" aria-label="Editable demo source">${escapeHtml(text)}</textarea>
-  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700" aria-label="Copy code">Copy</button>
+  <div class="pg-editor hidden" role="textbox" aria-label="Editable demo source" aria-multiline="true"></div>
+  <textarea class="pg-src-data" hidden aria-hidden="true">${escapeHtml(text)}</textarea>
+  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-slate-700 no-print" aria-label="Copy code">Copy</button>
   <div class="pg-toolbar no-print flex gap-2 bg-slate-100 border-t border-blue-200 px-3 py-2">
     <button type="button" class="pg-edit px-2 py-1 text-xs rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">✎ Edit code</button>
     <button type="button" class="pg-run hidden px-2 py-1 text-xs rounded bg-blue-600 border border-blue-600 text-white hover:bg-blue-700">▶ Run</button>
@@ -417,7 +479,7 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
     <div class="prose prose-slate max-w-none">${content}</div>
   </main>
   ${COPY_SCRIPT}
-  ${slug && PLAYGROUND_TOPICS.has(slug) ? PLAYGROUND_SCRIPT : ''}
+  ${slug && PLAYGROUND_TOPICS.has(slug) ? `<script>var PLAYGROUND_TOPIC = ${JSON.stringify(slug)};</script>${PLAYGROUND_SCRIPT}` : ''}
 </body>
 </html>`;
 }
