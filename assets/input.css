@@ -49,6 +49,18 @@
   border-color: #1e3a5f;
 }
 
+/* TOC: hide the browser's default disclosure triangle on <summary>. */
+.toc-summary::-webkit-details-marker { display: none; }
+.toc-summary { list-style: none; }
+
+/* TOC: rotate the burger icon slightly when open to hint at collapse. */
+.toc-details[open] .toc-burger { opacity: 0.6; }
+
+/* Print: force the TOC list open so it appears in saved PDFs. */
+@media print {
+  .toc-details > ol { display: block !important; }
+}
+
 /* Show copy button when the code block is hovered or focused-within. */
 .code-block:hover .copy-btn,
 .code-block:focus-within .copy-btn {

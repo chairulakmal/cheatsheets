@@ -99,12 +99,18 @@ function escapeHtml(raw: string): string {
 function buildToc(sections: string[]): string {
   const items = sections
     .map((s) => `<li><a href="#${slugify(s)}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">${tocLabel(s)}</a></li>`)
-    .join('\n      ');
-  return `<nav aria-label="Table of contents" class="not-prose my-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-  <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Contents</p>
-  <ol class="list-decimal list-inside space-y-1 pl-0">
-    ${items}
-  </ol>
+    .join('\n        ');
+  return `<nav aria-label="Table of contents" class="not-prose my-6 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+  <details class="toc-details">
+    <summary class="toc-summary flex items-center gap-2 cursor-pointer select-none px-4 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg">
+      <svg class="toc-burger shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect y="2" width="16" height="2" rx="1"/><rect y="7" width="16" height="2" rx="1"/><rect y="12" width="16" height="2" rx="1"/></svg>
+      Contents
+      <span class="ml-auto text-xs font-normal text-slate-400 dark:text-slate-500">${sections.length} sections</span>
+    </summary>
+    <ol class="list-decimal list-inside space-y-1 px-4 pb-3 pt-1">
+      ${items}
+    </ol>
+  </details>
 </nav>`;
 }
 
