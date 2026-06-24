@@ -49,9 +49,12 @@ The **Patterns** sheets (TypeScript, React, Next.js, Vue, Nuxt) cover patterns a
 
 ## How to read them
 
-Go to **[cheat.chairulakmal.com](https://cheat.chairulakmal.com/)** and pick a topic. That's it — no account, no install, no login.
+Go to **[cheat.chairulakmal.com](https://cheat.chairulakmal.com/)** and pick a topic, or use the
+**search box** on the homepage — it searches across every cheatsheet's full content (headings, prose,
+and code), not just the titles. No account, no install, no login.
 
-Every page has a **"Save as PDF"** button in the header if you want an offline copy.
+Every page has a **"Save as PDF"** button in the header if you want an offline copy, and a
+**dark-mode toggle** in the top-right.
 
 ---
 
@@ -67,8 +70,9 @@ You need [Node.js](https://nodejs.org) 24 or newer (see `.nvmrc`).
 
 ```bash
 npm install          # install dependencies (once)
-npm run dev          # watch mode — rebuilds on every file save
+npm run dev          # watch mode — rebuilds HTML on every file save (no search index)
 npm run build:html   # one-off build of all HTML pages
+npm run build:site   # build:html + the Pagefind search index (what gets deployed)
 npm run serve        # static-serve dist/ at http://localhost:8080
 npm run validate     # lint content (untagged fences, missing headings, etc.)
 npm run check        # TypeScript typecheck + ESLint
@@ -76,7 +80,8 @@ npm run check        # TypeScript typecheck + ESLint
 
 The live demos and editable playground load their runtimes (Vue, React, CodeMirror) from the
 site's own origin, so **preview the built site with `npm run serve`** — opening the HTML files
-directly from disk (`file://`) shows the static content but won't run the demos.
+directly from disk (`file://`) shows the static content but won't run the demos. To test **search**
+locally, run `npm run build:site` first (plain `build:html` / `dev` don't build the index).
 
 ### Adding a cheatsheet
 

@@ -33,6 +33,32 @@ previous one is done.
 
 ---
 
+## Next up — prioritized backlog (open items only)
+
+The phases below are a roughly chronological log; most are done. This list is the **working
+priority order** for what's left, ranked by impact-to-effort. Each item links to its phase for
+detail. When picking up "what's next" work, start at the top of this list.
+
+1. **SQL cheatsheet with PGlite** (Phase 4b) — *highest technical signal, and next up.* Live
+   in-browser PostgreSQL via WASM. Biggest remaining "big rock" (3 MB runtime + new `SQL_TOPICS`
+   infra); schedule it deliberately, not as a quick win. Finishes Phase 4b.
+2. **Japanese UI toggle** (Someday) — *highest Tokyo-specific signal.* Needs an i18n string layer
+   that doesn't exist yet, so real effort. Worth doing before applying to roles; even homepage-only
+   is meaningful.
+3. **Full accessibility audit** (Phase 5) — valuable for a portfolio, but tedious and low visible
+   payoff. Do after the items above.
+4. **User feedback loop** (Phase 3) — pin a GitHub Discussions thread. Five minutes, but near-zero
+   impact until the site has traffic. Low priority.
+
+*Done since this list was written:* Pagefind client-side search (self-hosted, indexes the full
+content body) — see Phase 5.
+
+Demand-gated (don't start without a signal): Phase 4c stretch topics (Go, Rust, Docker),
+full-screen "Try it" sandbox, combined all-topics PDF, full i18n/translations. See **Someday /
+maybe**.
+
+---
+
 ## Phase 1 — Validate & CI (correctness gate)
 
 Goal: mistakes are caught by machine before they ship. Nothing else starts until CI is green.
@@ -140,10 +166,9 @@ time-box, ship what's ready and explicitly defer the rest.
 
 ## Phase 5 — Discovery & polish (unlock when topic count ≥ 15)
 
-Goal: the collection stays navigable as it grows. **Priority order within Phase 5:**
-1. Topic grouping + dark mode (one session, high visual impact)
-2. Pagefind search (makes the site a usable daily tool, not just a showcase)
-3. Vue prominence on the homepage (see Someday/maybe)
+Goal: the collection stays navigable as it grows. Topic grouping, dark mode, Vue prominence, and
+Pagefind search have shipped; the remaining items are the **full accessibility audit** and the
+**Pagefind Component UI** global search modal (grouped together — both are accessibility work).
 
 - [x] **Topic grouping / tags** on the landing page — grouped by *Fundamentals* (JS, TS, HTML,
   CSS, Git), *Frameworks* (React, Next.js, Vue, Nuxt), *Backend* (Rails, Elixir, Python), and
@@ -153,10 +178,24 @@ Goal: the collection stays navigable as it grows. **Priority order within Phase 
   template HTML in `build.ts`; Shiki dual-theme (`github-light`/`github-dark`) with CSS variable
   switch in `input.css`; FOUC-prevention inline `<script>` in `<head>`; toggle button in header
   persists to `localStorage`.
-- [ ] **Client-side search** using [Pagefind](https://pagefind.app) — post-build step, ~25 KB JS
-  bundle, no backend required. Do after topic grouping so the UI has a logical home.
+- [x] **Client-side search** using [Pagefind](https://pagefind.app) — self-hosted post-build index
+  (`npm run build:search`, wired into `build:site` + the deploy/release workflows). `pagefind` is a
+  devDep. `data-pagefind-body` on each topic page's `.prose` container indexes the **full content
+  body** (prose + code), excluding the homepage and demo iframe fragments; `data-pagefind-ignore`
+  keeps copy buttons / playground chrome out. Default UI on the homepage with `.dark` variable
+  overrides. Possible follow-up: global search in every page header (currently homepage-only);
+  Pagefind's newer Component UI as an upgrade from the Default UI.
 - [ ] **Full accessibility audit** — keyboard navigation, contrast ratios, screen-reader labels
   across all topics.
+- [ ] **Pagefind Component UI — global search modal.** Grouped with the accessibility audit because
+  the main payoff is accessibility. Decision: stay on the Default UI for now (it's supported, not
+  deprecated; the build banner is cosmetic). The newer Component UI (Pagefind 1.5+, files already
+  emitted into `dist/pagefind/`) is the upgrade path: a ⌘K-style search **modal** reachable from a
+  small "Search" button in *every* page header (topic pages included, so search goes global instead
+  of homepage-only), plus WAI-ARIA accessibility and auto-translated UI text — the latter also pairs
+  with the Japanese UI toggle. Trade-off: more integration code than today's one-liner, and it
+  replaces the inline homepage box (re-home it or keep both). Self-hosted, no new runtime dep. See
+  https://pagefind.app/docs/search-ui/.
 - [x] **Editable demo playground — Tier 2 shipped.** CodeMirror 6 editor with TypeScript/JSX syntax
   highlighting on both `vue-patterns` and `react-patterns`, lazy-loaded on first Edit from a
   **self-hosted, vendored** bundle (`assets/vendor/codemirror.js`, committed; copied into

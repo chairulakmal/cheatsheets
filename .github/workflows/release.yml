@@ -22,8 +22,8 @@ jobs:
 
       - run: npm ci
 
-      - name: Build HTML
-        run: npm run build:html
+      - name: Build site (HTML + search index)
+        run: npm run build:site
         env:
           SITE_URL: https://cheat.chairulakmal.com
       - name: Create dist.zip

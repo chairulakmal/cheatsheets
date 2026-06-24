@@ -463,14 +463,14 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
   <div class="text-sm leading-relaxed pg-display">${highlighted}</div>
   <div class="pg-editor hidden" role="textbox" aria-label="Editable demo source" aria-multiline="true"></div>
   <textarea class="pg-src-data" hidden aria-hidden="true">${escapeHtml(text)}</textarea>
-  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 no-print" aria-label="Copy code">Copy</button>
-  <div class="pg-toolbar no-print flex gap-2 bg-slate-100 dark:bg-slate-800 border-t border-blue-200 dark:border-blue-900 px-3 py-2">
+  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 no-print" data-pagefind-ignore aria-label="Copy code">Copy</button>
+  <div class="pg-toolbar no-print flex gap-2 bg-slate-100 dark:bg-slate-800 border-t border-blue-200 dark:border-blue-900 px-3 py-2" data-pagefind-ignore>
     <button type="button" class="pg-edit px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600">✎ Edit code</button>
     <button type="button" class="pg-run hidden px-2 py-1 text-xs rounded bg-blue-600 border border-blue-600 text-white hover:bg-blue-700">▶ Run</button>
     <button type="button" class="pg-reset hidden px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600">↺ Reset</button>
   </div>
   <div>
-    <div class="bg-slate-100 dark:bg-slate-800 border-t border-blue-200 dark:border-blue-900 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Output</div>
+    <div class="bg-slate-100 dark:bg-slate-800 border-t border-blue-200 dark:border-blue-900 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400" data-pagefind-ignore>Output</div>
     <iframe src="${demoSrc}" sandbox="allow-scripts" loading="lazy" title="Live demo" class="pg-preview block w-full border-0" style="height:${iframeHeight}px"></iframe>
   </div>
 </div>`;
@@ -478,16 +478,16 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
 
           return `<div class="not-prose code-block group relative my-6 rounded-xl border-2 border-blue-200 dark:border-blue-900 overflow-hidden shadow-sm">
   <div class="text-sm leading-relaxed">${highlighted}</div>
-  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" aria-label="Copy code">Copy</button>
+  <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" data-pagefind-ignore aria-label="Copy code">Copy</button>
   <div>
-    <div class="bg-slate-100 dark:bg-slate-800 border-t border-blue-200 dark:border-blue-900 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Output</div>
+    <div class="bg-slate-100 dark:bg-slate-800 border-t border-blue-200 dark:border-blue-900 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400" data-pagefind-ignore>Output</div>
     <iframe src="${demoSrc}" sandbox="allow-scripts" loading="lazy" title="Live demo" class="block w-full border-0" style="height:${iframeHeight}px"></iframe>
   </div>
 </div>`;
         }
 
         if (!language || language === 'text') {
-          return `<div class="not-prose code-block group relative my-4"><pre class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre><button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" aria-label="Copy code">Copy</button></div>`;
+          return `<div class="not-prose code-block group relative my-4"><pre class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre><button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" data-pagefind-ignore aria-label="Copy code">Copy</button></div>`;
         }
 
         try {
@@ -496,9 +496,9 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
             themes: { light: 'github-light', dark: 'github-dark' },
             defaultColor: false,
           });
-          return `<div class="not-prose code-block group relative my-4 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-sm leading-relaxed shadow-sm">${highlighted}<button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" aria-label="Copy code">Copy</button></div>`;
+          return `<div class="not-prose code-block group relative my-4 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-sm leading-relaxed shadow-sm">${highlighted}<button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" data-pagefind-ignore aria-label="Copy code">Copy</button></div>`;
         } catch {
-          return `<div class="not-prose code-block group relative my-4"><pre class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre><button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" aria-label="Copy code">Copy</button></div>`;
+          return `<div class="not-prose code-block group relative my-4"><pre class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm overflow-x-auto"><code>${text}</code></pre><button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200" data-pagefind-ignore aria-label="Copy code">Copy</button></div>`;
         }
       },
     },
@@ -508,10 +508,12 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
 interface PageOpts {
   slug?: string;
   lastUpdated?: string;
+  /** Inject the Pagefind search UI (homepage only). */
+  searchUI?: boolean;
 }
 
 function pageHtml(title: string, content: string, css: string, nav: string, description: string, opts: PageOpts = {}): string {
-  const { slug, lastUpdated } = opts;
+  const { slug, lastUpdated, searchUI } = opts;
   const pageUrl = slug && SITE_URL ? `${SITE_URL}/${slug}/` : SITE_URL ? `${SITE_URL}/` : '';
 
   const ogTags = `
@@ -542,6 +544,7 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
   ${pageUrl ? `<link rel="canonical" href="${pageUrl}">` : ''}
   ${ogTags}
   <style>${css}</style>
+  ${searchUI ? `<link rel="stylesheet" href="/pagefind/pagefind-ui.css">` : ''}
   <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(!s&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');})()</script>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 min-h-screen">
@@ -556,7 +559,7 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
     </div>
   </header>
   <main class="max-w-3xl mx-auto px-6 py-10">
-    <div class="prose prose-slate dark:prose-invert max-w-none">${content}</div>
+    <div class="prose prose-slate dark:prose-invert max-w-none"${slug ? ' data-pagefind-body' : ''}>${content}</div>
   </main>
   <footer class="border-t border-slate-200 dark:border-slate-700 mt-4">
     <div class="max-w-3xl mx-auto px-6 py-6 text-sm text-slate-500 dark:text-slate-400">
@@ -566,6 +569,8 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
   ${COPY_SCRIPT}
   ${slug && PLAYGROUND_TOPICS.has(slug) ? `<script>var PLAYGROUND_TOPIC = ${JSON.stringify(slug)};</script>${PLAYGROUND_SCRIPT}` : ''}
   <script>(function(){var h=document.documentElement,btn=document.getElementById('theme-toggle');function apply(dark){h.classList.toggle('dark',dark);if(btn)btn.textContent=dark?'Light':'Dark';}apply(h.classList.contains('dark'));if(btn)btn.addEventListener('click',function(){var dark=!h.classList.contains('dark');apply(dark);localStorage.setItem('theme',dark?'dark':'light');});})()</script>
+  ${searchUI ? `<script src="/pagefind/pagefind-ui.js"></script>
+  <script>window.addEventListener('DOMContentLoaded',function(){new PagefindUI({element:'#search',showSubResults:true,showImages:false});});</script>` : ''}
 </body>
 </html>`;
 }
@@ -606,13 +611,15 @@ function buildIndexPage(css: string): string {
     topicSection('Advanced', 'Senior-level deep dives — patterns, pitfalls, and tradeoffs, in fuller prose than the beginner sheets.', advanced),
   ].join('\n  ');
 
+  const search = `<div id="search" class="not-prose no-print mb-10" data-pagefind-ignore></div>`;
+
   return pageHtml(
     'Developer Cheatsheets',
-    `<p class="lead">Quick-reference guides for programming languages and frameworks.</p>${content}`,
+    `<p class="lead">Quick-reference guides for programming languages and frameworks.</p>${search}${content}`,
     css,
     '',
     'Quick-reference developer cheatsheets for popular programming languages and frameworks, with live demos and code examples.',
-    {},
+    { searchUI: true },
   );
 }
 

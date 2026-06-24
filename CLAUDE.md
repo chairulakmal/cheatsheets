@@ -30,7 +30,7 @@ add `advanced: true` without that being the explicit intent.
 
 ## Current status
 
-Nineteen topics registered; all nineteen complete. Phases 1–2 shipped: content linter, CI, watch mode, copy buttons, per-page TOC, meta descriptions, PDF print fix. Phase 4a beginner coverage shipped: HTML, CSS, Git. Phase 4b started: Bash. Phase 5 polish landed: homepage topic grouping (Fundamentals/Frameworks/Backend/Advanced, Vue-first), dark mode (Tailwind `darkMode: 'class'` + Shiki dual-theme).
+Nineteen topics registered; all nineteen complete. Phases 1–2 shipped: content linter, CI, watch mode, copy buttons, per-page TOC, meta descriptions, PDF print fix. Phase 4a beginner coverage shipped: HTML, CSS, Git. Phase 4b started: Bash. Phase 5 polish landed: homepage topic grouping (Fundamentals/Frameworks/Backend/Advanced, Vue-first), dark mode (Tailwind `darkMode: 'class'` + Shiki dual-theme), and client-side search (Pagefind, self-hosted, indexes the full content body).
 
 **JavaScript is topic #1 in the manifest** — it is the foundation for TypeScript, React, Vue, Next.js, and Nuxt. Always list and build JavaScript before TypeScript.
 
@@ -87,10 +87,12 @@ not whatever is most interesting. If you finish a roadmap item, tick it off in `
 ## Commands
 
 ```bash
-npm run dev          # watch src/ + assets/, rebuild HTML on change
-npm run build        # CSS + HTML + PDF (full build)
+npm run dev          # watch src/ + assets/, rebuild HTML on change (no search index)
+npm run build        # CSS + HTML + search + PDF (full build)
 npm run build:html   # CSS + HTML only — use this while editing content
                      # Set SITE_URL=https://... for absolute OG/canonical URLs
+npm run build:site   # build:html + build:search — what CI deploys; run before `serve` to test search
+npm run build:search # Pagefind index over dist/ (post-build; writes dist/pagefind/) — needs HTML built first
 npm run build:css    # Tailwind regen only
 npm run build:pdf    # PDF only (needs Chrome/Chromium; build HTML first)
 npm run clean        # rm -rf dist
@@ -250,6 +252,26 @@ Notes and constraints:
 - Editing only works for runtime-template Vue (what the demos already use); `<script setup>` SFC
   syntax won't compile in-browser without `@vue/compiler-sfc`.
 
+## Client-side search (Pagefind)
+
+Search is **Pagefind** — a post-build static indexer, run via `npm run build:search` (`pagefind
+--site dist`, wired into `build:site` and the full `build`). It crawls the already-built `dist/`
+HTML and writes a **self-hosted** bundle to `dist/pagefind/` (JS, CSS, WASM, index — no CDN, matching
+the demo-runtime policy). Pagefind is a devDep; its binary is fetched on install.
+
+- **What gets indexed = the content body.** `build.ts` puts `data-pagefind-body` on the `.prose`
+  container **only on topic pages** (gated on `opts.slug`). That attribute makes Pagefind index only
+  pages that carry it, and only the markup inside it — so it captures the full prose **and** code of
+  each topic, while automatically excluding the homepage chrome and the `demos/demo-N.html` iframe
+  fragments (which have no such attribute). Result titles come from each page's `<title>` tag.
+- **UI noise is excluded** via `data-pagefind-ignore` on copy buttons, the playground toolbar, and
+  the "Output" labels. Add that attribute to any new pure-chrome element inside `.prose`.
+- **Search UI is homepage-only.** `pageHtml` injects the Default UI (`pagefind-ui.css/js`) and a
+  `#search` box when `opts.searchUI` is set — `buildIndexPage` is the only caller that sets it. Dark
+  mode is handled by `--pagefind-ui-*` variable overrides under `.dark` in `input.css`.
+- **The index is built from `dist/`, so it lags HTML edits.** `npm run dev` / `build:html` do **not**
+  index — run `npm run build:site` before `npm run serve` to test search locally.
+
 ## PDF / print
 
 **Readers get PDFs from the browser**, not from CI. Each topic page has a "Save as PDF" button
@@ -279,6 +301,9 @@ deploy nor release workflow installs Chromium. Chrome is located via a path list
   you rename a heading the anchor in the TOC updates automatically on next build.
 - **Copy button not appearing** → the button is `opacity-0` by default and shown via
   `.code-block:hover .copy-btn` in `input.css`. All code wrappers must carry the `code-block` class.
+- **Search box empty / 404s on `pagefind-ui.js`** → the index is built from `dist/` by a separate
+  step. `build:html` (and `dev`) skip it; run `npm run build:site` before `npm run serve`. A new
+  topic won't be searchable until that runs.
 
 ## Adding a topic
 
