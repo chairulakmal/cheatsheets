@@ -515,6 +515,11 @@ function pageHtml(title: string, content: string, css: string, nav: string, desc
   <main class="max-w-3xl mx-auto px-6 py-10">
     <div class="prose prose-slate max-w-none">${content}</div>
   </main>
+  <footer class="border-t border-slate-200 mt-4">
+    <div class="max-w-3xl mx-auto px-6 py-6 text-sm text-slate-500">
+      <a href="https://github.com/chairulakmal/cheatsheets" class="text-blue-600 hover:underline">View source on GitHub</a>
+    </div>
+  </footer>
   ${COPY_SCRIPT}
   ${slug && PLAYGROUND_TOPICS.has(slug) ? `<script>var PLAYGROUND_TOPIC = ${JSON.stringify(slug)};</script>${PLAYGROUND_SCRIPT}` : ''}
 </body>
