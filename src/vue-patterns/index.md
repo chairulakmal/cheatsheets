@@ -70,6 +70,23 @@ function handleChange(e: Event) {
 </script>
 ```
 
+## Generic components (Vue 3.3+)
+
+Add `generic="T"` to `<script setup>` and the type parameter flows through props, emits, and slots — the way to build a reusable list, table, or select that stays fully typed for every caller.
+
+```vue
+<script setup lang="ts" generic="T extends { id: string | number }">
+defineProps<{ items: T[]; modelValue: T | null }>()
+const emit = defineEmits<{ 'update:modelValue': [item: T] }>()
+</script>
+
+<template>
+  <button v-for="item in items" :key="item.id" @click="emit('update:modelValue', item)">
+    <slot :item="item" />
+  </button>
+</template>
+```
+
 ## defineModel
 
 `defineModel` (Vue 3.4+) replaces the `modelValue` prop + `update:modelValue` emit pattern with a single reactive ref.
@@ -86,6 +103,20 @@ const model = defineModel<string>({ required: true })
     @input="model = ($event.target as HTMLInputElement).value"
   />
 </template>
+```
+
+## v-model arguments and modifiers
+
+Name a model to expose several `v-model`s on one component, and read custom modifiers (`.trim`, or your own) from the second tuple element of `defineModel` to transform the value on write.
+
+```vue
+<script setup lang="ts">
+// Parent: <UserForm v-model:name="name" v-model:title.capitalize="title" />
+const name = defineModel<string>('name')
+const [title, mods] = defineModel<string>('title', {
+  set: (v) => (mods.capitalize ? v[0].toUpperCase() + v.slice(1) : v),
+})
+</script>
 ```
 
 ## Composables
@@ -227,6 +258,31 @@ createApp({
 }).mount("#app");
 ```
 
+## Writable computed (getter/setter)
+
+A `computed` with a `set` becomes two-way: the getter derives a value, the setter fans a write back out to the underlying refs. The classic use is binding one field to several pieces of state.
+
+```demo
+import { createApp, ref, computed } from "vue";
+
+createApp({
+  setup() {
+    const first = ref("Ada"), last = ref("Lovelace");
+    const fullName = computed({
+      get: () => `${first.value} ${last.value}`,
+      set: (v) => { const [f, ...r] = v.split(" "); first.value = f; last.value = r.join(" "); },
+    });
+    return { first, last, fullName };
+  },
+  template: `
+    <div>
+      <input :value="fullName" @input="fullName = $event.target.value" style="width:220px" />
+      <p>first = <strong>{{ first }}</strong>, last = <strong>{{ last }}</strong></p>
+    </div>
+  `,
+}).mount("#app");
+```
+
 ## watch vs watchEffect
 
 Use `watchEffect` to auto-track dependencies and run immediately; use `watch` when you need the old value or explicit control.
@@ -244,6 +300,20 @@ watchEffect(() => console.log(query.value, page.value))
 watch(query, (newVal, oldVal) => {
   page.value = 1 // reset page when query changes
 })
+```
+
+## watch — multiple sources, deep, and options
+
+Pass an array to watch several sources at once (new/old arrive as tuples). Watching a getter that returns an object needs `deep`; `immediate` runs the callback on setup and `once` (Vue 3.4+) runs it a single time.
+
+```typescript
+import { watch } from 'vue'
+
+// React to either source; new and old values come back as tuples
+watch([query, page], ([q, p], [prevQ, prevP]) => { /* … */ })
+
+// Deep-watch a getter, run immediately, then never again
+watch(() => form.profile, onChange, { deep: true, immediate: true, once: true })
 ```
 
 ## Flush timing and `nextTick`
@@ -299,6 +369,26 @@ const user = await fetchUser() // top-level await — this component is async
 
 `<Suspense>` is still flagged experimental, so its API can shift. Pair it with `onErrorCaptured`: a rejected async setup surfaces as a thrown error that needs a boundary.
 
+## Error handling — `onErrorCaptured` and `errorHandler`
+
+`onErrorCaptured` catches errors thrown by descendants — render, lifecycle, watchers, async setup — letting a component act as an error boundary. Return `false` to mark the error handled and stop it propagating.
+
+```typescript
+import { onErrorCaptured } from 'vue'
+
+onErrorCaptured((err, instance, info) => {
+  report(err, info)  // info names the Vue hook that threw
+  return false       // handled — don't bubble to the parent boundary
+})
+```
+
+Register an app-level handler as the last-resort net for anything no boundary caught.
+
+```typescript
+// main.ts
+app.config.errorHandler = (err, instance, info) => report(err, info)
+```
+
 ## Teleport
 
 `Teleport` renders content in a different DOM node — use it for modals that must escape `overflow: hidden` or stacking contexts.
@@ -332,6 +422,24 @@ Wrap a single element in `<Transition>` to animate enter and leave states with C
 </style>
 ```
 
+## Custom directives
+
+When the logic is genuinely about direct DOM access — autofocus, scroll position, tooltips, intersection observers — a directive fits better than a component. In `<script setup>` a `const vName` is auto-registered as `v-name`; register app-wide with `app.directive`.
+
+```demo
+import { createApp } from "vue";
+
+createApp({
+  directives: {
+    // template uses v-highlight="'#fde68a'"; binding.value is the color
+    highlight: { mounted: (el, binding) => { el.style.background = binding.value; } },
+  },
+  template: `<p v-highlight="'#fde68a'" style="padding:8px">Styled by a custom v-highlight directive.</p>`,
+}).mount("#app");
+```
+
+Directives expose the full element lifecycle — `created`, `beforeMount`, `mounted`, `beforeUpdate`, `updated`, `beforeUnmount`, `unmounted` — and each hook receives a `binding` with `value`, `arg`, and `modifiers`.
+
 ## Lifecycle hooks
 
 Composition API lifecycle hooks run code at key moments — most commonly `onMounted` for setup and `onUnmounted` for cleanup.
@@ -344,6 +452,25 @@ let timer: number
 onMounted(() => { timer = window.setInterval(poll, 1000) })
 onUnmounted(() => clearInterval(timer)) // prevent a memory leak when destroyed
 </script>
+```
+
+## `<KeepAlive>` and cached lifecycle
+
+`<KeepAlive>` caches a toggled component instead of destroying it, preserving its state (scroll, form input, fetched data) across switches. A cached component runs `onActivated`/`onDeactivated` on show/hide *instead of* mount/unmount — the right place to pause and resume work.
+
+```vue
+<template>
+  <KeepAlive :max="10">
+    <component :is="currentTab" />
+  </KeepAlive>
+</template>
+```
+
+```typescript
+import { onActivated, onDeactivated } from 'vue'
+
+onActivated(() => resumePolling())    // re-shown from the cache
+onDeactivated(() => pausePolling())   // hidden, but still alive
 ```
 
 ## defineExpose and `useTemplateRef` (Vue 3.5)
@@ -365,6 +492,25 @@ Vue 3.5's `useTemplateRef` replaces the name-matched template ref, decoupling th
 import { useTemplateRef } from 'vue'
 const el = useTemplateRef('inputEl') // binds to ref="inputEl"
 </script>
+```
+
+## Fallthrough attributes, `useAttrs`, and `defineOptions`
+
+Attributes a parent puts on a component that aren't declared props — `class`, `id`, listeners — "fall through" to the root element. When the real target isn't the root, set `inheritAttrs: false` via `defineOptions` (Vue 3.3+) and forward `useAttrs()` yourself.
+
+```vue
+<script setup lang="ts">
+import { useAttrs } from 'vue'
+defineOptions({ inheritAttrs: false })
+const attrs = useAttrs() // { class, id, onClick, … }
+</script>
+
+<template>
+  <label class="field">
+    <span>{{ label }}</span>
+    <input v-bind="attrs" />  <!-- forward to the input, not the wrapper -->
+  </label>
+</template>
 ```
 
 ## Pinia — scalable state management
@@ -397,6 +543,23 @@ const auth = useAuthStore()
 const { user, isLoggedIn } = storeToRefs(auth) // reactivity preserved
 // const { user } = auth                        // WRONG — loses reactivity
 </script>
+```
+
+## Plugins
+
+A plugin is the install-time seam for app-wide concerns — register global components or directives, `provide` shared config, or attach a service. It's an object with an `install(app, options)` method (or a bare function) passed to `app.use`.
+
+```typescript
+import type { App } from 'vue'
+
+export const analytics = {
+  install(app: App, options: { id: string }) {
+    app.provide('analytics', createTracker(options.id)) // inject() anywhere
+    app.directive('track', { mounted: (el, b) => bindTracking(el, b.value) })
+    app.config.globalProperties.$track = track          // usable in templates
+  },
+}
+// main.ts: app.use(analytics, { id: 'UA-123' })
 ```
 
 ## Slots
@@ -443,6 +606,21 @@ A scoped slot passes child-owned data back up to the parent, letting the parent 
     </template>
   </UserList>
 </template>
+```
+
+## Render functions and `h()`
+
+Templates compile to render functions; write one directly with `h(type, props, children)` when the structure is dynamic in a way a template expresses awkwardly — like choosing the element tag at runtime. JSX is available via `@vitejs/plugin-vue-jsx`.
+
+```typescript
+import { h } from 'vue'
+
+// A heading whose level is data-driven — clumsy in a template, clear here
+const Heading = (props: { level: number }, { slots }: any) =>
+  h(`h${props.level}`, { class: 'title' }, slots.default?.())
+
+// props carries attrs, class/style, and onXxx event listeners
+h('button', { class: 'btn', onClick: () => emit('go') }, 'Click me')
 ```
 
 ## Reactivity performance
