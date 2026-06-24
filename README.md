@@ -33,13 +33,13 @@ Deeper deep-dives written in fuller prose — patterns, pitfalls, and tradeoffs 
 | Topic | Runnable examples? |
 |-------|-------------------|
 | TypeScript Patterns | No |
-| React Patterns | Yes — code runs in the page |
+| React Patterns | Yes — live demos + editable CodeMirror playground |
 | Next.js Patterns | No |
-| Vue Patterns | Yes — code runs in the page |
+| Vue Patterns | Yes — live demos + editable CodeMirror playground |
 | Nuxt Patterns | No |
 | React vs Vue | No |
 
-The **Patterns** sheets (TypeScript, React, Next.js, Vue, Nuxt) cover patterns and pitfalls — including performance, scalability, and security topics. **React vs Vue** is a side-by-side deep dive into both reactivity models and their tradeoffs.
+The **Patterns** sheets (TypeScript, React, Next.js, Vue, Nuxt) cover patterns and pitfalls — including performance, scalability, and security topics. **React vs Vue** is a side-by-side deep dive into both reactivity models and their tradeoffs. React Patterns and Vue Patterns include an editable sandbox: click "✎ Edit code" on any demo to open a CodeMirror editor, modify the code, and hit "▶ Run" to see the result live.
 
 ---
 

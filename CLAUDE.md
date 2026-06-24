@@ -7,14 +7,14 @@ Live demos for JS-family topics run in sandboxed iframes.
 Audience is **beginners** — prefer full terms ("TypeScript", not "TS") in prose, explain each
 concept in one plain sentence before the code, and keep examples short.
 
-**Exception — the "Advanced" tier:** four pages are deliberate **senior-level** pages — they use
+**Exception — the "Advanced" tier:** six pages are deliberate **senior-level** pages — they use
 long explanatory prose and cover tradeoffs, not one-sentence intros: `react-vs-vue`,
-`typescript-patterns`, `vue-patterns`, `nuxt-patterns`. They are the approved deviations from the
-beginner-prose rule; do not "simplify" them back down. These topics carry `advanced: true` in
-`src/index.ts`, which both records the classification and renders them in a separate **"Advanced"**
-section on the homepage. The ~10-line-per-code-block rule (a PDF-rendering constraint) still applies
-to them. Every other topic stays beginner-focused — do not add `advanced: true` without that being
-the explicit intent.
+`typescript-patterns`, `react-patterns`, `nextjs-patterns`, `vue-patterns`, `nuxt-patterns`. They
+are the approved deviations from the beginner-prose rule; do not "simplify" them back down. These
+topics carry `advanced: true` in `src/index.ts`, which both records the classification and renders
+them in a separate **"Advanced"** section on the homepage. The ~10-line-per-code-block rule (a
+PDF-rendering constraint) still applies to them. Every other topic stays beginner-focused — do not
+add `advanced: true` without that being the explicit intent.
 
 ## Working agreements (read first)
 
@@ -47,9 +47,9 @@ Fifteen topics registered; all fifteen complete. Phases 1–2 shipped: content l
 | `src/elixir/index.md` | Complete, static code + `# =>` output |
 | `src/python/index.md` | Complete, static code + `# =>` output |
 | `src/typescript-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — generics, utility types, keyof/typeof, overloads, never/exhaustiveness, branded types, security + distributive conditionals, assertion functions, interface-vs-type, variance/`in`/`out`, `const` type params, variadic tuples, compiler strictness, type-checker perf |
-| `src/react-patterns/index.md` | Complete, **live demos** (in `JSX_TOPICS`), **Advanced** (`advanced: true`) — React 19: custom hooks, useReducer, context re-render trap, memoization/React Compiler, refs, useId, useTransition/useDeferredValue, useSyncExternalStore, error boundaries, Suspense, key-reset, controlled/uncontrolled, `use()`, form actions, no-effect, StrictMode, security (dangerouslySetInnerHTML, URL injection, SSR state) |
+| `src/react-patterns/index.md` | Complete, **live demos + editable playground** (in `JSX_TOPICS` + `PLAYGROUND_TOPICS`), **Advanced** (`advanced: true`) — React 19: custom hooks, useReducer, context re-render trap, memoization/React Compiler, refs, useId, useTransition/useDeferredValue, useSyncExternalStore, error boundaries, Suspense, key-reset, controlled/uncontrolled, `use()`, form actions, no-effect, StrictMode, security (dangerouslySetInnerHTML, URL injection, SSR state) |
 | `src/nextjs-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — Next 16 App Router: server/client components, server data fetch, Cache Components/`use cache`, route handlers, server actions, async request APIs, `proxy.ts`, segment config, generateStaticParams, streaming, metadata, image/font, navigation, parallel/intercepting routes, security (env, action auth) |
-| `src/vue-patterns/index.md` | Complete, **live demos + editable playground prototype** (in `VUE_TOPICS` + `PLAYGROUND_TOPICS`), **Advanced** (`advanced: true`) — script setup, Pinia, composables, slots, lifecycle, reactivity perf, watcher cleanup, security + reactive props destructure (3.5), composable design/`toValue`, flush timing/`nextTick`, Suspense, `defineExpose`/`useTemplateRef`, reactivity steering, `effectScope` |
+| `src/vue-patterns/index.md` | Complete, **live demos + editable playground** (in `VUE_TOPICS` + `PLAYGROUND_TOPICS`), **Advanced** (`advanced: true`) — script setup, Pinia, composables, slots, lifecycle, reactivity perf, watcher cleanup, security + reactive props destructure (3.5), composable design/`toValue`, flush timing/`nextTick`, Suspense, `defineExpose`/`useTemplateRef`, reactivity steering, `effectScope` |
 | `src/nuxt-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — useFetch, routeRules/hybrid rendering, Nitro caching, SSR auth, security headers, server-side auth + Nuxt 4 structure, SSR data-fetch model, server `$fetch` short-circuit, `callOnce`, client/server boundaries, Nitro cache storage/SWR, server middleware/plugins, route validation |
 | `src/react-vs-vue/index.md` | Complete, static, **Advanced** (`advanced: true`) — senior-level deep dive: reactivity model, ref/reactive/computed/watch/watchEffect vs useState/useEffect/useRef/useMemo, computed vs useMemo cache guarantee, composables vs hooks, immutable vs mutable, React 19 ref-as-prop, decision framework |
 | `scripts/validate.ts` | Content linter — untagged fences, H1, demo/live, SHIKI_LANGS |
@@ -159,23 +159,33 @@ it with esbuild and writes a standalone `dist/<topic>/demos/demo-N.html`, embedd
 - **Rails / Elixir never execute.** Show static code with an expected-output annotation (trailing
   `# => 42` or an `# Output:` comment). Do not add demos or attempt server-side/WASM execution.
 
-### Editable playground (Tier-1 prototype — `vue-patterns` only)
+### Editable playground (Tier-2 — `vue-patterns` and `react-patterns`)
 
-Topics in `PLAYGROUND_TOPICS` (currently just `vue-patterns`) render each ` ```demo ` fence as the
-normal pre-rendered iframe **plus** an "✎ Edit code" affordance. On Edit the static highlighted code
-is swapped for an editable `<textarea>` seeded with the source; "▶ Run" transpiles it **in the
-browser** with **Sucrase** (`https://esm.sh/sucrase@3.35.0`, lazy-loaded on first Run, TypeScript
-strip only — no JSX) and re-renders by setting the preview iframe's `srcdoc`; "↺ Reset" restores the
-original source and demo. Logic lives in `PLAYGROUND_SCRIPT` in `build.ts`, injected by `pageHtml`
-**only** for playground topics. Notes and constraints:
+Topics in `PLAYGROUND_TOPICS` render each ` ```demo ` fence as the normal pre-rendered iframe
+**plus** an "✎ Edit code" affordance. Clicking Edit lazy-loads **CodeMirror 6** (from esm.sh CDN,
+`?bundle` flag to keep deps self-contained) and mounts a full syntax-highlighted editor in a
+`<div class="pg-editor">`. The original source is stored in a hidden `<textarea class="pg-src-data">`
+and is never modified. "▶ Run" transpiles the editor content **in the browser** with **Sucrase**
+(`https://esm.sh/sucrase@3.35.0`, also lazy-loaded), then re-renders by setting `iframe.srcdoc`.
+"↺ Reset" dispatches a CodeMirror doc-replace transaction to restore the original source and restores
+the iframe's `src`. Logic lives in `PLAYGROUND_SCRIPT` in `build.ts`, injected by `pageHtml` **only**
+for playground topics. `var PLAYGROUND_TOPIC = "${slug}";` is injected just before the script so it
+can branch on topic at runtime.
 
-- The preview iframe stays `sandbox="allow-scripts"` (no `allow-same-origin`); Sucrase runs in the
-  trusted parent page, only compiled JS crosses into the sandbox.
-- Vue-only: `PLAYGROUND_SCRIPT` hardcodes the **Vue import map** — keep its version in sync with
-  `VUE_IMPORT_MAP`. Generalizing to React needs a JSX transform (`transforms: ['typescript','jsx']`)
-  and the React import map (a Tier-2 task).
-- The editor is a plain textarea (no syntax highlighting) — that's the Tier-1 tradeoff. Print is
-  preserved: the static highlighted code shows, editor/toolbar are `no-print`, iframe hidden.
+| Setting | Vue (`vue-patterns`) | React (`react-patterns`) |
+|---------|---------------------|--------------------------|
+| Sucrase transforms | `['typescript']` | `['typescript', 'jsx']` |
+| Preview import map | `VUE_IMPORT_MAP` (vue 3.5.35 esm-browser via jsDelivr) | `REACT_IMPORT_MAP` (react/react-dom 19.2.0 via esm.sh) |
+| Mount target | `#app` | `#root` |
+| CodeMirror language | `javascript({ typescript: true, jsx: false })` | `javascript({ typescript: true, jsx: true })` |
+
+Notes and constraints:
+
+- The preview iframe stays `sandbox="allow-scripts"` (no `allow-same-origin`); Sucrase and CodeMirror
+  run in the trusted parent page, only compiled JS crosses into the sandbox.
+- CDN versions in `PLAYGROUND_SCRIPT` must be kept in sync with `VUE_IMPORT_MAP` / `REACT_IMPORT_MAP`.
+- Print is preserved: the static Shiki-highlighted code shows, `.pg-editor` and `.pg-toolbar` are
+  `no-print`, the preview iframe is already hidden by the global `@media print` rule.
 - Editing only works for runtime-template Vue (what the demos already use); `<script setup>` SFC
   syntax won't compile in-browser without `@vue/compiler-sfc`.
 

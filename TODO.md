@@ -18,6 +18,9 @@ previous one is done.
   the three original Patterns sheets were reclassified from "intermediate" to senior-level. These
   carry `advanced: true` in `src/index.ts` and render in a separate "Advanced" section on the
   homepage. Documented in `CLAUDE.md` (audience section) and `README.md`.
+- **Editable playground upgraded to Tier 2** (CodeMirror 6 editor, shipped off-roadmap):
+  `vue-patterns` and `react-patterns` both have syntax-highlighted in-browser editing. Sucrase
+  transpiles; topic drives import map + transforms. No new npm deps — CodeMirror loads from CDN.
 - **Topic count is now 15**, which crosses the Phase 5 unlock threshold (≥ 15). Note the project's
   Foundation-first ordering: Phase 4a/4b coverage topics (HTML, CSS, Git, SQL, Bash) are still
   unstarted, so the Advanced tier grew the count ahead of that planned beginner coverage.
@@ -134,12 +137,13 @@ Goal: the collection stays navigable as it grows.
 - [ ] **Dark mode** toggle.
 - [ ] **Full accessibility audit** — keyboard navigation, contrast ratios, screen-reader labels
   across all topics.
-- [~] **Editable demo playground.** Tier-1 prototype **shipped on `vue-patterns`** (off-roadmap,
-  user-requested): "✎ Edit code" → editable textarea → "▶ Run" transpiles in-browser via Sucrase
-  (lazy-loaded) and re-renders the preview iframe. See `PLAYGROUND_TOPICS` / `PLAYGROUND_SCRIPT` in
-  `build.ts` and the CLAUDE.md "Editable playground" note. Remaining to generalize (Tier 2): add the
-  JSX transform + React import map for `react-patterns`, swap the textarea for CodeMirror, and decide
-  whether the compiler weight is worth shipping site-wide given the "small generator" ethos.
+- [x] **Editable demo playground — Tier 2 shipped.** CodeMirror 6 editor (lazy-loaded, `?bundle`)
+  with TypeScript/JSX syntax highlighting on both `vue-patterns` and `react-patterns`. Sucrase
+  handles in-browser transpilation; topic is detected at runtime via `PLAYGROUND_TOPIC` injected by
+  `build.ts`. Vue uses `['typescript']` transforms + Vue import map; React adds `'jsx'` + React
+  import map. See `PLAYGROUND_TOPICS` / `PLAYGROUND_SCRIPT` in `build.ts` and the CLAUDE.md
+  "Editable playground" section. Possible Tier-3 additions (not committed): full-screen sandbox
+  expand, CodeMirror autocomplete tuning, generalise to more topics.
 
 **Exit criteria:** Pagefind returns correct results for ten representative test queries. Landing
 page groups are accurate for all topics.
