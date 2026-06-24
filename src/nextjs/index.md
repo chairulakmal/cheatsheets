@@ -1,4 +1,4 @@
-# Next.js Cheatsheet
+# Next.js
 
 Next.js is a framework built on top of React that adds server-side rendering, file-based routing, and built-in optimisations. It lets you build full web applications — not just the UI layer, but also the server-side logic — in a single project.
 
@@ -122,13 +122,13 @@ createRoot(document.getElementById("root")).render(<Counter />);
 
 ## Data fetching in Server Components
 
-Server Components can be `async` functions. Call `fetch` directly — Next.js automatically caches the result.
+Server Components can be `async` functions — call `fetch` directly. Since Next.js 15, fetch results aren't cached by default; opt in with `next: { revalidate }` (or `cache: "force-cache"`).
 
 ```typescript
 // app/user/page.tsx
 async function getUser() {
   const res = await fetch("https://api.example.com/user/1", {
-    next: { revalidate: 60 },  // re-fetch at most every 60 seconds
+    next: { revalidate: 60 },  // cache and re-fetch at most every 60 seconds
   });
   return res.json();
 }
@@ -143,16 +143,17 @@ export default async function UserPage() {
 
 ## Dynamic routes
 
-Wrap a folder name in square brackets to make it a dynamic segment. The value is passed to the component as `params`.
+Wrap a folder name in square brackets to make it a dynamic segment. The value arrives in `params`, which is a **Promise** in Next.js 15+ — `await` it.
 
 ```typescript
 // app/blog/[slug]/page.tsx
 export default async function BlogPost({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const post = await fetch(`/api/posts/${params.slug}`).then(r => r.json());
+  const { slug } = await params;
+  const post = await fetch(`https://api.example.com/posts/${slug}`).then(r => r.json());
   return (
     <article>
       <h1>{post.title}</h1>
@@ -223,11 +224,12 @@ export default function BlogPage() {
 }
 ```
 
-For dynamic titles (based on data), export a `generateMetadata` function:
+For dynamic titles (based on data), export a `generateMetadata` function (`params` is a Promise here too):
 
 ```typescript
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const post = await fetch(`/api/posts/${params.slug}`).then(r => r.json());
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await fetch(`https://api.example.com/posts/${slug}`).then(r => r.json());
   return { title: post.title };
 }
 ```

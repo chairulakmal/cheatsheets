@@ -75,7 +75,11 @@ Wrap words to emphasise them: `<strong>` for important, `<em>` for stress, `<cod
 A `<table>` has rows (`<tr>`); header cells are `<th>` and normal cells are `<td>`.
 
 ```demo
-<table border="1" cellpadding="6">
+<style>
+  table { border-collapse: collapse; }
+  th, td { border: 1px solid #cbd5e1; padding: 6px 10px; }
+</style>
+<table>
   <tr><th>Name</th><th>Age</th></tr>
   <tr><td>Ana</td><td>29</td></tr>
   <tr><td>Bo</td><td>34</td></tr>

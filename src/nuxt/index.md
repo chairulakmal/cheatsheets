@@ -1,4 +1,4 @@
-# Nuxt Cheatsheet
+# Nuxt
 
 Nuxt is a framework built on top of Vue that adds server-side rendering, file-based routing, and automatic imports. It handles the configuration so you can focus on building features instead of wiring things together.
 

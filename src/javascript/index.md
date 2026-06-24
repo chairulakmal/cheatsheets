@@ -1,4 +1,4 @@
-# JavaScript Cheatsheet
+# JavaScript
 
 JavaScript is the language of the web — it runs in every browser and powers everything from simple interactions to full applications. It is the foundation that TypeScript, React, Vue, Next.js, and Nuxt are all built on.
 

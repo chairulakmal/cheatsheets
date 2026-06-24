@@ -1,4 +1,4 @@
-# React Cheatsheet
+# React
 
 React is a JavaScript library for building user interfaces. You build UIs by writing **components** — small, reusable pieces that each manage their own content and behaviour.
 

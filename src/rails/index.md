@@ -1,4 +1,4 @@
-# Rails Cheatsheet
+# Rails
 
 Ruby on Rails is a web framework that follows **convention over configuration** — it makes decisions for you so you can focus on building features instead of boilerplate.
 
@@ -147,7 +147,7 @@ rails db:migrate
 A generated migration looks like this:
 
 ```ruby
-class CreateArticles < ActiveRecord::Migration[7.1]
+class CreateArticles < ActiveRecord::Migration[8.0]
   def change
     create_table :articles do |t|
       t.string  :title

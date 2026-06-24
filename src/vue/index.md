@@ -1,4 +1,4 @@
-# Vue Cheatsheet
+# Vue
 
 Vue is a JavaScript framework for building user interfaces. You define what the UI should look like using **templates** — HTML with special Vue attributes — and Vue keeps the page in sync with your data automatically.
 

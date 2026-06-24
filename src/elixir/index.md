@@ -1,4 +1,4 @@
-# Elixir Cheatsheet
+# Elixir
 
 Elixir is a functional programming language built on the Erlang virtual machine. It is designed for building reliable, concurrent systems — and has a friendly, readable syntax.
 

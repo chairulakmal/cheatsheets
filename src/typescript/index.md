@@ -1,4 +1,4 @@
-# TypeScript Cheatsheet
+# TypeScript
 
 TypeScript adds **types** to JavaScript. Types tell the computer what kind of value a variable holds — a number, a string, a list, and so on. This catches mistakes before your code runs.
 

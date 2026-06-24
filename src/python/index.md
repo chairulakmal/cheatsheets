@@ -1,4 +1,4 @@
-# Python Cheatsheet
+# Python
 
 Python is a beginner-friendly language known for its readable syntax and broad use in web development, data analysis, automation, and artificial intelligence. It runs on a server or your local machine — not in the browser.
 
