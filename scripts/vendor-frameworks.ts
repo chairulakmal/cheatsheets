@@ -27,16 +27,24 @@
 import { mkdirSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import * as esbuild from 'esbuild';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const outDir = join(root, 'assets', 'vendor');
+const require = createRequire(import.meta.url);
 
-// React: one combined ESM bundle. Fragment comes from the `export *` (react exports it,
-// identical to jsx-runtime's). jsx/jsxs come from jsx-runtime; createRoot from react-dom.
+// React: one combined ESM bundle re-exporting react + react-dom/client + jsx-runtime.
+// `react`'s entry is CommonJS, so `export * from 'react'` produces only a star re-export
+// — it satisfies `import * as React` but NOT named imports like `import { useCallback }`
+// (those names aren't statically present in the ESM output). So we enumerate react's public
+// exports and re-export them by name. The list is derived at runtime from the installed
+// react package, so a version bump picks up new/removed exports automatically on regen.
+const reactNames = Object.keys(require('react'))
+  .filter((k) => /^[A-Za-z$_][\w$]*$/.test(k) && !k.startsWith('__'));
 const reactEntry = [
-  `export * from 'react';`,
+  `export { ${reactNames.join(', ')} } from 'react';`,
   `export { createRoot, hydrateRoot } from 'react-dom/client';`,
   `export { jsx, jsxs } from 'react/jsx-runtime';`,
 ].join('\n');
