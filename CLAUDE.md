@@ -30,7 +30,7 @@ add `advanced: true` without that being the explicit intent.
 
 ## Current status
 
-Fifteen topics registered; all fifteen complete. Phases 1–2 shipped: content linter, CI, watch mode, copy buttons, per-page TOC, meta descriptions, PDF print fix.
+Eighteen topics registered; all eighteen complete. Phases 1–2 shipped: content linter, CI, watch mode, copy buttons, per-page TOC, meta descriptions, PDF print fix. Phase 4a beginner coverage started: HTML, CSS, Git.
 
 **JavaScript is topic #1 in the manifest** — it is the foundation for TypeScript, React, Vue, Next.js, and Nuxt. Always list and build JavaScript before TypeScript.
 
@@ -46,6 +46,9 @@ Fifteen topics registered; all fifteen complete. Phases 1–2 shipped: content l
 | `src/rails/index.md` | Complete, static code + `# =>` output |
 | `src/elixir/index.md` | Complete, static code + `# =>` output |
 | `src/python/index.md` | Complete, static code + `# =>` output |
+| `src/html/index.md` | Complete, **live demos** (in `HTML_TOPICS`) — raw-HTML rendered visually in the iframe |
+| `src/css/index.md` | Complete, **live demos** (in `HTML_TOPICS`) — selectors, box model, **Flexbox** (4 sections), grid, position, variables, media queries |
+| `src/git/index.md` | Complete, static code + `# =>`/comment output — setup, workflow, branches, merge, remotes, undo, stash, gitignore, tags |
 | `src/typescript-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — generics, utility types, keyof/typeof, overloads, never/exhaustiveness, branded types, security + distributive conditionals, assertion functions, interface-vs-type, variance/`in`/`out`, `const` type params, variadic tuples, compiler strictness, type-checker perf |
 | `src/react-patterns/index.md` | Complete, **live demos + editable playground** (in `JSX_TOPICS` + `PLAYGROUND_TOPICS`), **Advanced** (`advanced: true`) — React 19: custom hooks, useReducer, context re-render trap, memoization/React Compiler, refs, useId, useTransition/useDeferredValue, useSyncExternalStore, error boundaries, Suspense, key-reset, controlled/uncontrolled, `use()`, form actions, no-effect, StrictMode, security (dangerouslySetInnerHTML, URL injection, SSR state) |
 | `src/nextjs-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — Next 16 App Router: server/client components, server data fetch, Cache Components/`use cache`, route handlers, server actions, async request APIs, `proxy.ts`, segment config, generateStaticParams, streaming, metadata, image/font, navigation, parallel/intercepting routes, security (env, action auth) |
@@ -159,6 +162,10 @@ it with esbuild and writes a standalone `dist/<topic>/demos/demo-N.html`, embedd
 | TypeScript / plain JS | (neither set) | `ts` | captures `console.log` into `#out` | none |
 | React | `JSX_TOPICS` | `tsx` + `jsx:automatic` | `#root` | `/assets/react.js` (react/react-dom 19.2.0) |
 | Vue | `VUE_TOPICS` | `ts` | `#app` | `/assets/vue.js` (vue 3.5.35 esm-browser) |
+| HTML / CSS | `HTML_TOPICS` | none (no transpile) | fence body → `<body>` verbatim | none |
+
+For an `HTML_TOPICS` demo the fence body is **raw HTML** (it may include its own `<style>`),
+rendered as-is in the sandboxed iframe so the reader sees the visual result — highlighted as `html`.
 
 - **Runtimes are self-hosted, not from a CDN.** Vue and React are vendored into `dist/assets/`
   (`vue.js`, `react.js`) from `assets/vendor/` — see **Self-hosted demo runtimes** below. The import

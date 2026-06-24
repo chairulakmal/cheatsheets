@@ -17,6 +17,9 @@ const SHIKI_LANGS = [
 
 const JSX_TOPICS = new Set(['react', 'nextjs', 'react-patterns']);
 const VUE_TOPICS = new Set(['vue', 'nuxt', 'vue-patterns']);
+// Raw-HTML demos: the fence body is rendered verbatim in the iframe (no transpile), so
+// readers see the visual result. The body may include its own <style> and markup.
+const HTML_TOPICS = new Set(['html', 'css']);
 
 // Tier-2 editable playground (CodeMirror). Topics here render demos with a full
 // syntax-highlighted editor (CodeMirror 6, lazy-loaded) instead of a plain textarea.
@@ -121,26 +124,49 @@ function copyVendorAssets(): void {
   console.log('Copied: dist/assets/{codemirror,vue,react}.js');
 }
 
-function buildDemoFile(slug: string, tsCode: string, index: number): string {
+function buildDemoFile(slug: string, source: string, index: number): string {
   const isJsx = JSX_TOPICS.has(slug);
   const isVue = VUE_TOPICS.has(slug);
+  const isHtml = HTML_TOPICS.has(slug);
 
-  const result = esbuild.transformSync(tsCode, {
-    loader: isJsx ? 'tsx' : 'ts',
-    target: 'es2020',
-    ...(isJsx ? { jsx: 'automatic' } : {}),
-  });
-
-  const demoHtml = isJsx
-    ? buildJsxDemoHtml(result.code)
-    : isVue
-    ? buildVueDemoHtml(result.code)
-    : buildConsoleDemoHtml(result.code);
+  let demoHtml: string;
+  if (isHtml) {
+    // No transpile — the fence body is HTML/CSS, rendered as-is.
+    demoHtml = buildHtmlDemoHtml(source);
+  } else {
+    const result = esbuild.transformSync(source, {
+      loader: isJsx ? 'tsx' : 'ts',
+      target: 'es2020',
+      ...(isJsx ? { jsx: 'automatic' } : {}),
+    });
+    demoHtml = isJsx
+      ? buildJsxDemoHtml(result.code)
+      : isVue
+      ? buildVueDemoHtml(result.code)
+      : buildConsoleDemoHtml(result.code);
+  }
 
   const demoDir = join(root, 'dist', slug, 'demos');
   mkdirSync(demoDir, { recursive: true });
   writeFileSync(join(demoDir, `demo-${index}.html`), demoHtml, 'utf-8');
   return `demos/demo-${index}.html`;
+}
+
+// Raw HTML/CSS demo: the fence body is dropped straight into <body>, so it may bring its
+// own <style> and markup. A minimal base style keeps unstyled output legible.
+function buildHtmlDemoHtml(raw: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: system-ui, sans-serif; font-size: 14px; margin: 0; padding: 12px 16px; background: #fff; color: #1e293b; }
+</style>
+</head>
+<body>
+${raw}
+</body>
+</html>`;
 }
 
 function buildConsoleDemoHtml(js: string): string {
@@ -421,12 +447,13 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
           }
           const isJsx = JSX_TOPICS.has(topic.slug);
           const isVue = VUE_TOPICS.has(topic.slug);
+          const isHtml = HTML_TOPICS.has(topic.slug);
           const demoSrc = buildDemoFile(topic.slug, text, demoIndex++);
           const highlighted = highlighter.codeToHtml(text, {
-            lang: isJsx ? 'tsx' : 'typescript',
+            lang: isHtml ? 'html' : isJsx ? 'tsx' : 'typescript',
             theme: 'github-light',
           });
-          const iframeHeight = isJsx || isVue ? 160 : 110;
+          const iframeHeight = isHtml ? 150 : isJsx || isVue ? 160 : 110;
 
           // Editable playground (prototype topics): static highlighted code +
           // an editable textarea revealed by "Edit", transpiled + re-rendered on "Run".

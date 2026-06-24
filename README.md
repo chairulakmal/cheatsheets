@@ -25,6 +25,9 @@ Plain-English, one-concept-at-a-time references — the main collection.
 | Ruby on Rails | No — expected output shown as comments |
 | Elixir | No — expected output shown as comments |
 | Python | No — expected output shown as comments |
+| HTML | Yes — rendered visually in the page |
+| CSS | Yes — rendered visually in the page |
+| Git | No — terminal output shown as comments |
 
 ### Advanced (senior-level)
 

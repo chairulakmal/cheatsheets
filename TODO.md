@@ -107,14 +107,17 @@ downloadable from the Releases page, CI auto-deploys on merge.
 
 ## Phase 4a — Broaden coverage: quick wins
 
-Goal: three high-reach topics with no new build infrastructure. Safe to expand now that validation,
-CI, and UX are in place.
+Goal: three high-reach topics. Safe to expand now that validation, CI, and UX are in place.
 
-- [ ] **HTML** cheatsheet — live DOM-manipulation demos, `live: true`.
-- [ ] **CSS** cheatsheet — live demos (visual output in iframe), `live: true`.
-- [ ] **Git** cheatsheet — static code + terminal output annotation, `live: false`.
+- [x] **HTML** cheatsheet — `live: true`, visual demos. Added a raw-HTML demo kind (`HTML_TOPICS`
+  in `build.ts`): the ` ```demo ` fence body is rendered verbatim in the sandboxed iframe (no
+  transpile), so readers see the result.
+- [x] **CSS** cheatsheet — `live: true`, visual demos (reuses `HTML_TOPICS`). Includes a Flexbox
+  block (basics, alignment, spacing/wrap, growing) as sections inside the page — no separate page.
+- [x] **Git** cheatsheet — static `bash` with `# =>`/comment output, `live: false`.
 
-Each topic follows the "Adding a topic" checklist in `CLAUDE.md`.
+Each topic follows the "Adding a topic" checklist in `CLAUDE.md`. Note this added the one small piece
+of build infrastructure the roadmap anticipated (raw-HTML/CSS iframe rendering).
 
 **Exit criteria:** all three pass `npm run validate`, render correctly on mobile, and CI is green.
 Ship Phase 4a before starting 4b.
