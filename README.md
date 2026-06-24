@@ -65,9 +65,14 @@ You need [Node.js](https://nodejs.org) 24 or newer (see `.nvmrc`).
 npm install          # install dependencies (once)
 npm run dev          # watch mode — rebuilds on every file save
 npm run build:html   # one-off build of all HTML pages
+npm run serve        # static-serve dist/ at http://localhost:8080
 npm run validate     # lint content (untagged fences, missing headings, etc.)
 npm run check        # TypeScript typecheck + ESLint
 ```
+
+The live demos and editable playground load their runtimes (Vue, React, CodeMirror) from the
+site's own origin, so **preview the built site with `npm run serve`** — opening the HTML files
+directly from disk (`file://`) shows the static content but won't run the demos.
 
 ### Adding a cheatsheet
 

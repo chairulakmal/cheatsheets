@@ -20,7 +20,12 @@ previous one is done.
   homepage. Documented in `CLAUDE.md` (audience section) and `README.md`.
 - **Editable playground upgraded to Tier 2** (CodeMirror 6 editor, shipped off-roadmap):
   `vue-patterns` and `react-patterns` both have syntax-highlighted in-browser editing. Sucrase
-  transpiles; topic drives import map + transforms. No new npm deps — CodeMirror loads from CDN.
+  transpiles; topic drives import map + transforms.
+- **Demo/playground runtimes are now self-hosted** (shipped off-roadmap): CodeMirror, Vue, and React
+  are vendored into `dist/assets/` (committed under `assets/vendor/`, regen via `npm run vendor:*`)
+  instead of loading from esm.sh/jsDelivr. Tradeoff: the demos load local ES modules from a
+  null-origin iframe, which needs http CORS — so local viewing is now via **`npm run serve`**, not
+  `file://`. Sucrase remains the one CDN runtime dep. GitHub Pages serves the CORS header in prod.
 - **Topic count is now 15**, which crosses the Phase 5 unlock threshold (≥ 15). Note the project's
   Foundation-first ordering: Phase 4a/4b coverage topics (HTML, CSS, Git, SQL, Bash) are still
   unstarted, so the Advanced tier grew the count ahead of that planned beginner coverage.

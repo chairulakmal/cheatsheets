@@ -53,9 +53,12 @@ Fifteen topics registered; all fifteen complete. Phases 1–2 shipped: content l
 | `src/nuxt-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — useFetch, routeRules/hybrid rendering, Nitro caching, SSR auth, security headers, server-side auth + Nuxt 4 structure, SSR data-fetch model, server `$fetch` short-circuit, `callOnce`, client/server boundaries, Nitro cache storage/SWR, server middleware/plugins, route validation |
 | `src/react-vs-vue/index.md` | Complete, static, **Advanced** (`advanced: true`) — senior-level deep dive: reactivity model, ref/reactive/computed/watch/watchEffect vs useState/useEffect/useRef/useMemo, computed vs useMemo cache guarantee, composables vs hooks, immutable vs mutable, React 19 ref-as-prop, decision framework |
 | `scripts/validate.ts` | Content linter — untagged fences, H1, demo/live, SHIKI_LANGS |
-| `scripts/build.ts` | Markdown → HTML (shiki, esbuild, demo iframes); copies vendored CodeMirror into `dist/assets/` |
+| `scripts/build.ts` | Markdown → HTML (shiki, esbuild, demo iframes); copies vendored runtimes into `dist/assets/` |
+| `scripts/serve.ts` | Minimal static server for `dist/` (`npm run serve`) — demos need http, not `file://` |
 | `scripts/vendor-codemirror.ts` | One-off generator for `assets/vendor/codemirror.js` (`npm run vendor:codemirror`) — not run during builds |
+| `scripts/vendor-frameworks.ts` | One-off generator for `assets/vendor/{vue,react}.js` (`npm run vendor:frameworks`) — not run during builds |
 | `assets/vendor/codemirror.js` | Committed CodeMirror IIFE bundle (`window.CM6`) for the editable playground (self-hosted) |
+| `assets/vendor/vue.js`, `react.js` | Committed self-hosted demo/playground runtimes (Vue full esm-browser; React combined bundle) |
 | `scripts/pdf.ts` | HTML → PDF (headless Chrome) — **optional local tool**, not run in CI |
 | `scripts/dev.ts` | Not needed — `npm run dev` uses nodemon directly |
 | `assets/input.css` | Tailwind v3 source (committed) |
@@ -88,8 +91,11 @@ npm run build:css    # Tailwind regen only
 npm run build:pdf    # PDF only (needs Chrome/Chromium; build HTML first)
 npm run clean        # rm -rf dist
 npm run validate     # content linter — runs fast, no build needed
+npm run serve        # static-serve dist/ at http://localhost:8080 (demos need http, not file://)
 npm run vendor:codemirror  # regenerate assets/vendor/codemirror.js (only when bumping CodeMirror;
                            # needs @codemirror/* installed on demand — see scripts/vendor-codemirror.ts)
+npm run vendor:frameworks  # regenerate assets/vendor/{vue,react}.js (only when bumping Vue/React;
+                           # needs vue/react/react-dom installed on demand — see scripts/vendor-frameworks.ts)
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint scripts/ src/
 npm run check        # typecheck + lint — run before committing
@@ -148,20 +154,43 @@ Authored **inline** as a ` ```demo ` fence; the fence body is the demo source. `
 it with esbuild and writes a standalone `dist/<topic>/demos/demo-N.html`, embedded via a
 `sandbox="allow-scripts"` iframe. The runtime depends on the topic:
 
-| Topic kind | Set in build.ts | esbuild loader | Mount | Runtime (pinned CDN) |
-|------------|-----------------|----------------|-------|----------------------|
+| Topic kind | Set in build.ts | esbuild loader | Mount | Runtime (self-hosted) |
+|------------|-----------------|----------------|-------|-----------------------|
 | TypeScript / plain JS | (neither set) | `ts` | captures `console.log` into `#out` | none |
-| React | `JSX_TOPICS` | `tsx` + `jsx:automatic` | `#root` | react/react-dom 19.2.0 via esm.sh |
-| Vue | `VUE_TOPICS` | `ts` | `#app` | vue 3.5.35 esm-browser via jsDelivr |
+| React | `JSX_TOPICS` | `tsx` + `jsx:automatic` | `#root` | `/assets/react.js` (react/react-dom 19.2.0) |
+| Vue | `VUE_TOPICS` | `ts` | `#app` | `/assets/vue.js` (vue 3.5.35 esm-browser) |
 
-- **Vue is not JSX** — it uses runtime template strings, so the import map points at the *full* build
-  (`vue.esm-browser.js`, includes the template compiler). Don't move Vue into `JSX_TOPICS`.
-- **CDN versions are pinned on purpose.** Bump them deliberately, never "to latest" as a side effect.
-  Current pins match framework peer deps: React 19.2.0 (Next.js 16 peer dep), Vue 3.5.35 (Nuxt 4 peer dep).
+- **Runtimes are self-hosted, not from a CDN.** Vue and React are vendored into `dist/assets/`
+  (`vue.js`, `react.js`) from `assets/vendor/` — see **Self-hosted demo runtimes** below. The import
+  maps (`REACT_IMPORT_MAP` / `VUE_IMPORT_MAP`) point at root-absolute `/assets/*.js` so they resolve
+  the same from a demo iframe and from the playground's srcdoc preview.
+- **Served over http only.** The demo iframes are null-origin sandboxes; fetching a *local* module
+  needs CORS headers, which a server provides but `file://` does not. So **view the built site with
+  `npm run serve`** (http://localhost:8080) — opening `dist/**/*.html` directly from disk renders the
+  static content but **not** the demos. GitHub Pages sends the needed CORS header in production.
+- **Vue is not JSX** — it uses runtime template strings, so `vue.js` is the *full* esm-browser build
+  (includes the template compiler). Don't move Vue into `JSX_TOPICS`.
+- **Versions are pinned on purpose.** Bump them deliberately in `scripts/vendor-frameworks.ts`, never
+  "to latest". Current pins match framework peer deps: React 19.2.0 (Next.js 16), Vue 3.5.35 (Nuxt 4).
 - A TS/JS demo should `console.log` its results (that's what shows). A framework demo must
   `createRoot(...).render(...)` (React) or `createApp(...).mount("#app")` (Vue).
 - **Rails / Elixir never execute.** Show static code with an expected-output annotation (trailing
   `# => 42` or an `# Output:` comment). Do not add demos or attempt server-side/WASM execution.
+
+### Self-hosted demo runtimes (`vue.js`, `react.js`)
+
+Vendored, committed bundles under `assets/vendor/`, copied into `dist/assets/` by `copyVendorAssets()`
+in `build.ts` (alongside `codemirror.js`). Their npm packages are **not** devDeps — installed on demand
+only when regenerating, so CI installs stay lean.
+
+- **`vue.js`** — the published `vue.esm-browser.prod.js` (full build, ~169 KB), copied verbatim.
+- **`react.js`** — a single esbuild bundle exporting `react` + `react-dom/client` + `react/jsx-runtime`
+  (~194 KB, production). One bundle = **one copy of React** (mapping all three import-map specifiers to
+  it avoids the "Invalid hook call" two-copies failure). The React playground transpile uses Sucrase
+  with `jsxRuntime: 'automatic'` to match — the demos import only named hooks, no default `React`.
+- **Regenerate (only when bumping):** `npm i -D --no-save vue@… react@… react-dom@…` then
+  `npm run vendor:frameworks` (writes both files via `scripts/vendor-frameworks.ts`); commit the
+  result and update the pins in that script's header.
 
 ### Editable playground (Tier-2 — `vue-patterns` and `react-patterns`)
 
@@ -178,10 +207,10 @@ transaction to restore the original source and restores the iframe's `src`. Logi
 runtime.
 
 **The CodeMirror bundle is vendored, not built per deploy.** `assets/vendor/codemirror.js`
-(~500 KB raw, ~166 KB gzip) is **committed**; `copyCodeMirror()` in `build.ts` just copies it into
-`dist/assets/` on each build. It is an **IIFE** exposing `window.CM6` (not an ES module): the
-playground loads it via a classic `<script>` tag because dynamic `import()` of a *local* ES module is
-blocked from `file://` origins by browser CORS — which breaks viewing the built pages locally. A
+(~500 KB raw, ~166 KB gzip) is **committed**; `copyVendorAssets()` in `build.ts` copies it into
+`dist/assets/` on each build (with `vue.js` / `react.js`). It is an **IIFE** exposing `window.CM6`
+(not an ES module), loaded via a classic `<script>` tag — so the editor itself isn't subject to the
+local-module CORS restriction that the demo iframes are (it works even from `file://`). A
 **single** bundle is also the whole point: it guarantees one copy of `@codemirror/state` and
 `@codemirror/view`, which prevents CodeMirror's "Unrecognized extension value" error. (esm.sh's
 floating caret resolution can hand back multiple copies — that bug is why this is self-hosted and

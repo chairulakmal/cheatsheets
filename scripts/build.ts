@@ -37,22 +37,28 @@ function getLastUpdated(filePath: string): string {
   }
 }
 
-// Pinned CDN versions — update deliberately, never automatically.
+// Self-hosted runtimes — vendored into dist/assets/ from assets/vendor/ (see
+// scripts/vendor-frameworks.ts; versions pinned there). Served from our own origin, so
+// the demo iframes need no CDN. Paths are root-absolute (/assets/...) so they resolve the
+// same from a demo iframe (/<slug>/demos/demo-N.html) and from the playground's srcdoc
+// preview (which resolves relatives against the parent page /<slug>/index.html). All three
+// React specifiers map to one bundle — a single copy of React (no "Invalid hook call").
 const REACT_IMPORT_MAP = `<script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@19.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
-    "react/jsx-runtime": "https://esm.sh/react@19.2.0/jsx-runtime"
+    "react": "/assets/react.js",
+    "react-dom/client": "/assets/react.js",
+    "react/jsx-runtime": "/assets/react.js"
   }
 }
 </script>`;
 
-// Full build includes the template compiler, required for runtime template strings.
+// vue.js is the full esm-browser build (includes the template compiler the runtime
+// template strings need).
 const VUE_IMPORT_MAP = `<script type="importmap">
 {
   "imports": {
-    "vue": "https://cdn.jsdelivr.net/npm/vue@3.5.35/dist/vue.esm-browser.js"
+    "vue": "/assets/vue.js"
   }
 }
 </script>`;
@@ -99,17 +105,20 @@ function buildToc(sections: string[]): string {
 </nav>`;
 }
 
-// Copy the pre-built, committed CodeMirror bundle into dist/assets/ so it is served from
-// our own origin. The bundle is vendored (assets/vendor/codemirror.js) rather than rebuilt
-// here — the @codemirror/* packages are not devDeps, so CI installs stay lean and deploys
-// do no bundling. It's an IIFE (exposes window.CM6), loaded via a classic <script> tag so
-// it works from file:// too; the playground injects it lazily on first "Edit". Regenerate
-// with `npm run vendor:codemirror` (see scripts/vendor-codemirror.ts).
-function copyCodeMirror(): void {
+// Copy the pre-built, committed vendor bundles into dist/assets/ so they are served from
+// our own origin (no CDN). The bundles are vendored under assets/vendor/ rather than built
+// here — their npm packages are not devDeps, so CI installs stay lean and deploys do no
+// bundling. Regenerate with `npm run vendor:codemirror` / `npm run vendor:frameworks`.
+//   codemirror.js — IIFE (window.CM6) for the editable playground editor (classic <script>).
+//   vue.js / react.js — ES-module runtimes for the live demos + playground previews,
+//   referenced via the import maps above.
+function copyVendorAssets(): void {
   const outDir = join(root, 'dist', 'assets');
   mkdirSync(outDir, { recursive: true });
-  copyFileSync(join(root, 'assets', 'vendor', 'codemirror.js'), join(outDir, 'codemirror.js'));
-  console.log('Copied: dist/assets/codemirror.js');
+  for (const file of ['codemirror.js', 'vue.js', 'react.js']) {
+    copyFileSync(join(root, 'assets', 'vendor', file), join(outDir, file));
+  }
+  console.log('Copied: dist/assets/{codemirror,vue,react}.js');
 }
 
 function buildDemoFile(slug: string, tsCode: string, index: number): string {
@@ -236,8 +245,10 @@ document.querySelectorAll('.copy-btn').forEach(function(btn) {
 // CDN versions are pinned deliberately; keep in sync with REACT_IMPORT_MAP / VUE_IMPORT_MAP.
 const PLAYGROUND_SCRIPT = `<script>
 (function () {
-  var VUE_MAP = '<script type="importmap">{"imports":{"vue":"https://cdn.jsdelivr.net/npm/vue@3.5.35/dist/vue.esm-browser.js"}}<\\/script>';
-  var REACT_MAP = '<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.2.0","react-dom/client":"https://esm.sh/react-dom@19.2.0/client","react/jsx-runtime":"https://esm.sh/react@19.2.0/jsx-runtime"}}<\\/script>';
+  // Self-hosted runtimes (see REACT_IMPORT_MAP / VUE_IMPORT_MAP in build.ts). Root-absolute
+  // /assets/* paths resolve correctly from the srcdoc preview (relative to the parent page).
+  var VUE_MAP = '<script type="importmap">{"imports":{"vue":"/assets/vue.js"}}<\\/script>';
+  var REACT_MAP = '<script type="importmap">{"imports":{"react":"/assets/react.js","react-dom/client":"/assets/react.js","react/jsx-runtime":"/assets/react.js"}}<\\/script>';
   var STYLE = '<style>body{font-family:system-ui,sans-serif;font-size:13px;margin:0;padding:12px 16px;background:#fff;color:#1e293b}.err{color:#dc2626;font-family:monospace;font-size:12px;white-space:pre-wrap}</style>';
 
   function isReact() { return typeof PLAYGROUND_TOPIC !== 'undefined' && PLAYGROUND_TOPIC === 'react-patterns'; }
@@ -345,10 +356,15 @@ const PLAYGROUND_SCRIPT = `<script>
 
     runBtn.addEventListener('click', function () {
       var src = editorView ? editorView.state.doc.toString() : srcData.value;
-      var transforms = isReact() ? ['typescript', 'jsx'] : ['typescript'];
+      // React: the demos import only named hooks (no default React), so JSX must use the
+      // automatic runtime (imports jsx from "react/jsx-runtime") — classic would need a
+      // React global. Matches the esbuild jsx:'automatic' used for the pre-rendered demos.
+      var opts = isReact()
+        ? { transforms: ['typescript', 'jsx'], jsxRuntime: 'automatic', production: true }
+        : { transforms: ['typescript'] };
       runBtn.textContent = '… compiling';
       loadSucrase().then(function (transform) {
-        var code = transform(src, { transforms: transforms }).code;
+        var code = transform(src, opts).code;
         preview.removeAttribute('src');
         preview.srcdoc = previewDoc(code);
       }).catch(function (e) {
@@ -554,9 +570,9 @@ async function main() {
   const css = readFileSync(join(root, 'assets', 'style.css'), 'utf-8');
   mkdirSync(join(root, 'dist'), { recursive: true });
 
-  // Self-host the playground editor bundle (CodeMirror) under dist/assets/.
-  if (topics.some((t) => PLAYGROUND_TOPICS.has(t.slug))) {
-    copyCodeMirror();
+  // Self-host the demo/playground runtimes (CodeMirror, Vue, React) under dist/assets/.
+  if (topics.some((t) => t.live)) {
+    copyVendorAssets();
   }
 
   for (const topic of topics) {

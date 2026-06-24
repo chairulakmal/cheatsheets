@@ -15,10 +15,12 @@
     "build:pdf": "tsx scripts/pdf.ts",
     "clean": "rm -rf dist",
     "dev": "nodemon --watch src --watch assets --ext md,css,ts --exec \"npm run build:html\"",
+    "serve": "tsx scripts/serve.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint scripts/ src/",
     "validate": "tsx scripts/validate.ts",
     "vendor:codemirror": "tsx scripts/vendor-codemirror.ts",
+    "vendor:frameworks": "tsx scripts/vendor-frameworks.ts",
     "check": "npm run typecheck && npm run lint"
   },
   "license": "MIT",
