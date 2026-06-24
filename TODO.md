@@ -137,13 +137,15 @@ Goal: the collection stays navigable as it grows.
 - [ ] **Dark mode** toggle.
 - [ ] **Full accessibility audit** — keyboard navigation, contrast ratios, screen-reader labels
   across all topics.
-- [x] **Editable demo playground — Tier 2 shipped.** CodeMirror 6 editor (lazy-loaded, `?bundle`)
-  with TypeScript/JSX syntax highlighting on both `vue-patterns` and `react-patterns`. Sucrase
-  handles in-browser transpilation; topic is detected at runtime via `PLAYGROUND_TOPIC` injected by
-  `build.ts`. Vue uses `['typescript']` transforms + Vue import map; React adds `'jsx'` + React
-  import map. See `PLAYGROUND_TOPICS` / `PLAYGROUND_SCRIPT` in `build.ts` and the CLAUDE.md
+- [x] **Editable demo playground — Tier 2 shipped.** CodeMirror 6 editor with TypeScript/JSX syntax
+  highlighting on both `vue-patterns` and `react-patterns`, lazy-loaded on first Edit from a
+  **self-hosted, vendored** bundle (`assets/vendor/codemirror.js`, committed; copied into
+  `dist/assets/` by `build.ts`; regenerate with `npm run vendor:codemirror`).
+  Sucrase handles in-browser transpilation; topic is detected at runtime via `PLAYGROUND_TOPIC`
+  injected by `build.ts`. Vue uses `['typescript']` transforms + Vue import map; React adds `'jsx'` +
+  React import map. See `PLAYGROUND_TOPICS` / `PLAYGROUND_SCRIPT` in `build.ts` and the CLAUDE.md
   "Editable playground" section. Possible Tier-3 additions (not committed): full-screen sandbox
-  expand, CodeMirror autocomplete tuning, generalise to more topics.
+  expand, CodeMirror autocomplete tuning, self-host Sucrase too, generalise to more topics.
 
 **Exit criteria:** Pagefind returns correct results for ten representative test queries. Landing
 page groups are accurate for all topics.

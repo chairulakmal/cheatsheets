@@ -53,7 +53,9 @@ Fifteen topics registered; all fifteen complete. Phases 1–2 shipped: content l
 | `src/nuxt-patterns/index.md` | Complete, static, **Advanced** (`advanced: true`) — useFetch, routeRules/hybrid rendering, Nitro caching, SSR auth, security headers, server-side auth + Nuxt 4 structure, SSR data-fetch model, server `$fetch` short-circuit, `callOnce`, client/server boundaries, Nitro cache storage/SWR, server middleware/plugins, route validation |
 | `src/react-vs-vue/index.md` | Complete, static, **Advanced** (`advanced: true`) — senior-level deep dive: reactivity model, ref/reactive/computed/watch/watchEffect vs useState/useEffect/useRef/useMemo, computed vs useMemo cache guarantee, composables vs hooks, immutable vs mutable, React 19 ref-as-prop, decision framework |
 | `scripts/validate.ts` | Content linter — untagged fences, H1, demo/live, SHIKI_LANGS |
-| `scripts/build.ts` | Markdown → HTML (shiki, esbuild, demo iframes) |
+| `scripts/build.ts` | Markdown → HTML (shiki, esbuild, demo iframes); copies vendored CodeMirror into `dist/assets/` |
+| `scripts/vendor-codemirror.ts` | One-off generator for `assets/vendor/codemirror.js` (`npm run vendor:codemirror`) — not run during builds |
+| `assets/vendor/codemirror.js` | Committed CodeMirror IIFE bundle (`window.CM6`) for the editable playground (self-hosted) |
 | `scripts/pdf.ts` | HTML → PDF (headless Chrome) — **optional local tool**, not run in CI |
 | `scripts/dev.ts` | Not needed — `npm run dev` uses nodemon directly |
 | `assets/input.css` | Tailwind v3 source (committed) |
@@ -86,6 +88,8 @@ npm run build:css    # Tailwind regen only
 npm run build:pdf    # PDF only (needs Chrome/Chromium; build HTML first)
 npm run clean        # rm -rf dist
 npm run validate     # content linter — runs fast, no build needed
+npm run vendor:codemirror  # regenerate assets/vendor/codemirror.js (only when bumping CodeMirror;
+                           # needs @codemirror/* installed on demand — see scripts/vendor-codemirror.ts)
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint scripts/ src/
 npm run check        # typecheck + lint — run before committing
@@ -162,15 +166,31 @@ it with esbuild and writes a standalone `dist/<topic>/demos/demo-N.html`, embedd
 ### Editable playground (Tier-2 — `vue-patterns` and `react-patterns`)
 
 Topics in `PLAYGROUND_TOPICS` render each ` ```demo ` fence as the normal pre-rendered iframe
-**plus** an "✎ Edit code" affordance. Clicking Edit lazy-loads **CodeMirror 6** (from esm.sh CDN,
-`?bundle` flag to keep deps self-contained) and mounts a full syntax-highlighted editor in a
-`<div class="pg-editor">`. The original source is stored in a hidden `<textarea class="pg-src-data">`
-and is never modified. "▶ Run" transpiles the editor content **in the browser** with **Sucrase**
-(`https://esm.sh/sucrase@3.35.0`, also lazy-loaded), then re-renders by setting `iframe.srcdoc`.
-"↺ Reset" dispatches a CodeMirror doc-replace transaction to restore the original source and restores
-the iframe's `src`. Logic lives in `PLAYGROUND_SCRIPT` in `build.ts`, injected by `pageHtml` **only**
-for playground topics. `var PLAYGROUND_TOPIC = "${slug}";` is injected just before the script so it
-can branch on topic at runtime.
+**plus** an "✎ Edit code" affordance. Clicking Edit lazy-loads **CodeMirror 6** from a **self-hosted
+bundle** (`dist/assets/codemirror.js`, served from our own origin — not a CDN) by injecting a classic
+`<script>` tag, and mounts a full syntax-highlighted editor in a `<div class="pg-editor">`. The original source is stored in a hidden
+`<textarea class="pg-src-data">` and is never modified. "▶ Run" transpiles the editor content **in the
+browser** with **Sucrase** (`https://esm.sh/sucrase@3.35.0`, lazy-loaded — still the one CDN runtime
+dep), then re-renders by setting `iframe.srcdoc`. "↺ Reset" dispatches a CodeMirror doc-replace
+transaction to restore the original source and restores the iframe's `src`. Logic lives in
+`PLAYGROUND_SCRIPT` in `build.ts`, injected by `pageHtml` **only** for playground topics.
+`var PLAYGROUND_TOPIC = "${slug}";` is injected just before the script so it can branch on topic at
+runtime.
+
+**The CodeMirror bundle is vendored, not built per deploy.** `assets/vendor/codemirror.js`
+(~500 KB raw, ~166 KB gzip) is **committed**; `copyCodeMirror()` in `build.ts` just copies it into
+`dist/assets/` on each build. It is an **IIFE** exposing `window.CM6` (not an ES module): the
+playground loads it via a classic `<script>` tag because dynamic `import()` of a *local* ES module is
+blocked from `file://` origins by browser CORS — which breaks viewing the built pages locally. A
+**single** bundle is also the whole point: it guarantees one copy of `@codemirror/state` and
+`@codemirror/view`, which prevents CodeMirror's "Unrecognized extension value" error. (esm.sh's
+floating caret resolution can hand back multiple copies — that bug is why this is self-hosted and
+pre-bundled.) The `@codemirror/*` packages are **not** devDeps, so CI installs stay lean and deploys
+do zero bundling. To bump CodeMirror, install the packages on demand and regenerate:
+`npm i -D --no-save codemirror@… @codemirror/state@… @codemirror/view@… @codemirror/lang-javascript@…`
+then `npm run vendor:codemirror` (writes `assets/vendor/codemirror.js` via
+`scripts/vendor-codemirror.ts`); commit the new bundle and update the pinned versions noted in that
+script's header.
 
 | Setting | Vue (`vue-patterns`) | React (`react-patterns`) |
 |---------|---------------------|--------------------------|
@@ -183,7 +203,11 @@ Notes and constraints:
 
 - The preview iframe stays `sandbox="allow-scripts"` (no `allow-same-origin`); Sucrase and CodeMirror
   run in the trusted parent page, only compiled JS crosses into the sandbox.
-- CDN versions in `PLAYGROUND_SCRIPT` must be kept in sync with `VUE_IMPORT_MAP` / `REACT_IMPORT_MAP`.
+- The preview iframe's framework runtime (Vue / React) still loads from CDN via the import map in
+  `PLAYGROUND_SCRIPT` — keep those versions in sync with `VUE_IMPORT_MAP` / `REACT_IMPORT_MAP`.
+- The injected `<script src="../assets/codemirror.js">` is relative to the topic page
+  (`/<slug>/index.html`); the bundle lives at `/assets/codemirror.js`. CodeMirror versions are
+  pinned in `scripts/vendor-codemirror.ts` (the packages are installed on demand, not as devDeps).
 - Print is preserved: the static Shiki-highlighted code shows, `.pg-editor` and `.pg-toolbar` are
   `no-print`, the preview iframe is already hidden by the global `@media print` rule.
 - Editing only works for runtime-template Vue (what the demos already use); `<script setup>` SFC

@@ -18,6 +18,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint scripts/ src/",
     "validate": "tsx scripts/validate.ts",
+    "vendor:codemirror": "tsx scripts/vendor-codemirror.ts",
     "check": "npm run typecheck && npm run lint"
   },
   "license": "MIT",

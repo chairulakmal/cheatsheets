@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -97,6 +97,19 @@ function buildToc(sections: string[]): string {
     ${items}
   </ol>
 </nav>`;
+}
+
+// Copy the pre-built, committed CodeMirror bundle into dist/assets/ so it is served from
+// our own origin. The bundle is vendored (assets/vendor/codemirror.js) rather than rebuilt
+// here — the @codemirror/* packages are not devDeps, so CI installs stay lean and deploys
+// do no bundling. It's an IIFE (exposes window.CM6), loaded via a classic <script> tag so
+// it works from file:// too; the playground injects it lazily on first "Edit". Regenerate
+// with `npm run vendor:codemirror` (see scripts/vendor-codemirror.ts).
+function copyCodeMirror(): void {
+  const outDir = join(root, 'dist', 'assets');
+  mkdirSync(outDir, { recursive: true });
+  copyFileSync(join(root, 'assets', 'vendor', 'codemirror.js'), join(outDir, 'codemirror.js'));
+  console.log('Copied: dist/assets/codemirror.js');
 }
 
 function buildDemoFile(slug: string, tsCode: string, index: number): string {
@@ -250,14 +263,22 @@ const PLAYGROUND_SCRIPT = `<script>
     return sucraseP;
   }
 
-  // CodeMirror 6 — pinned; update deliberately. @6.0.1 is the codemirror meta-package;
-  // ?bundle makes each import self-contained so shared deps don't conflict across imports.
+  // CodeMirror 6 — self-hosted single bundle (dist/assets/codemirror.js, vendored from
+  // assets/vendor/). One bundle guarantees a single copy of @codemirror/state and
+  // @codemirror/view, which prevents CodeMirror's "Unrecognized extension value" error.
+  // Loaded as a classic IIFE <script> (exposes window.CM6) rather than a module import:
+  // dynamic import() of a local ES module is blocked from file:// origins, which breaks
+  // local viewing of the built pages. A classic script tag has no such restriction.
+  // The src is relative to the topic page (/<slug>/index.html → /assets/codemirror.js).
   var cmP;
   function loadCM() {
-    if (!cmP) cmP = Promise.all([
-      import('https://esm.sh/codemirror@6.0.1?bundle'),
-      import('https://esm.sh/@codemirror/lang-javascript@6.2.2?bundle'),
-    ]).then(function (mods) { return { cm: mods[0], javascript: mods[1].javascript }; });
+    if (!cmP) cmP = new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = '../assets/codemirror.js';
+      s.onload = function () { resolve(window.CM6); };
+      s.onerror = function () { reject(new Error('Failed to load codemirror.js')); };
+      document.head.appendChild(s);
+    });
     return cmP;
   }
 
@@ -297,15 +318,14 @@ const PLAYGROUND_SCRIPT = `<script>
       editBtn.textContent = '… loading';
       editBtn.disabled = true;
       loadCM().then(function (mods) {
-        var cm = mods.cm;
         var jsLang = mods.javascript({ typescript: true, jsx: isReact() });
-        editorView = new cm.EditorView({
-          state: cm.EditorState.create({
+        editorView = new mods.EditorView({
+          state: mods.EditorState.create({
             doc: srcData.value,
             extensions: [
-              cm.basicSetup,
+              mods.basicSetup,
               jsLang,
-              cm.EditorView.theme({
+              mods.EditorView.theme({
                 '&': { fontSize: '12.5px', fontFamily: 'ui-monospace,Menlo,Consolas,monospace' },
                 '.cm-scroller': { overflow: 'auto', maxHeight: '420px' },
               }),
@@ -533,6 +553,11 @@ async function main() {
 
   const css = readFileSync(join(root, 'assets', 'style.css'), 'utf-8');
   mkdirSync(join(root, 'dist'), { recursive: true });
+
+  // Self-host the playground editor bundle (CodeMirror) under dist/assets/.
+  if (topics.some((t) => PLAYGROUND_TOPICS.has(t.slug))) {
+    copyCodeMirror();
+  }
 
   for (const topic of topics) {
     const mdPath = join(root, 'src', topic.slug, 'index.md');
