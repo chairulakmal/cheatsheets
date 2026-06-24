@@ -400,6 +400,16 @@ function buildMarked(highlighter: Highlighter, topic: Topic) {
         return `<${tag}>${inner}</${tag}>\n`;
       },
 
+      // External links (different origin) open in a new tab with rel="noopener noreferrer";
+      // relative / same-site links are left in the current tab.
+      link({ href, title, tokens }) {
+        const text = this.parser.parseInline(tokens ?? []);
+        const titleAttr = title ? ` title="${title}"` : '';
+        const isExternal = /^https?:\/\//i.test(href) && (!SITE_URL || !href.startsWith(SITE_URL));
+        const ext = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+        return `<a href="${href}"${titleAttr}${ext}>${text}</a>`;
+      },
+
       code({ text, lang }) {
         const language = (lang ?? '').split(':')[0];
 
